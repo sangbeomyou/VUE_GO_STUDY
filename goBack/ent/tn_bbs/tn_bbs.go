@@ -26,7 +26,7 @@ const (
 	// FieldUdtDate holds the string denoting the udt_date field in the database.
 	FieldUdtDate = "udt_date"
 	// Table holds the table name of the tn_bbs in the database.
-	Table = "TN_BBS"
+	Table = "tn_bb_ss"
 )
 
 // Columns holds all SQL columns for tn_bbs fields.

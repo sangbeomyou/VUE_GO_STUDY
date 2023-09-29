@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"goBack/ent/predicate"
 	"goBack/ent/tn_bbs"
+	"goBack/ent/tn_user"
 	"sync"
 
 	"entgo.io/ent"
@@ -23,7 +24,8 @@ const (
 	OpUpdateOne = ent.OpUpdateOne
 
 	// Node types.
-	TypeTNBBS = "TN_BBS"
+	TypeTNBBS  = "TN_BBS"
+	TypeTNUSER = "TN_USER"
 )
 
 // TNBBSMutation represents an operation that mutates the TN_BBS nodes in the graph.
@@ -680,4 +682,606 @@ func (m *TNBBSMutation) ClearEdge(name string) error {
 // It returns an error if the edge is not defined in the schema.
 func (m *TNBBSMutation) ResetEdge(name string) error {
 	return fmt.Errorf("unknown TN_BBS edge %s", name)
+}
+
+// TNUSERMutation represents an operation that mutates the TN_USER nodes in the graph.
+type TNUSERMutation struct {
+	config
+	op            Op
+	typ           string
+	id            *int
+	user_id       *string
+	user_name     *string
+	password      *string
+	delect_yn     *string
+	reg_date      *string
+	udt_date      *string
+	clearedFields map[string]struct{}
+	done          bool
+	oldValue      func(context.Context) (*TN_USER, error)
+	predicates    []predicate.TN_USER
+}
+
+var _ ent.Mutation = (*TNUSERMutation)(nil)
+
+// tnUSEROption allows management of the mutation configuration using functional options.
+type tnUSEROption func(*TNUSERMutation)
+
+// newTNUSERMutation creates new mutation for the TN_USER entity.
+func newTNUSERMutation(c config, op Op, opts ...tnUSEROption) *TNUSERMutation {
+	m := &TNUSERMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeTNUSER,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withTN_USERID sets the ID field of the mutation.
+func withTN_USERID(id int) tnUSEROption {
+	return func(m *TNUSERMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *TN_USER
+		)
+		m.oldValue = func(ctx context.Context) (*TN_USER, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().TN_USER.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withTN_USER sets the old TN_USER of the mutation.
+func withTN_USER(node *TN_USER) tnUSEROption {
+	return func(m *TNUSERMutation) {
+		m.oldValue = func(context.Context) (*TN_USER, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m TNUSERMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m TNUSERMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// SetID sets the value of the id field. Note that this
+// operation is only accepted on creation of TN_USER entities.
+func (m *TNUSERMutation) SetID(id int) {
+	m.id = &id
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *TNUSERMutation) ID() (id int, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *TNUSERMutation) IDs(ctx context.Context) ([]int, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []int{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().TN_USER.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetUserID sets the "user_id" field.
+func (m *TNUSERMutation) SetUserID(s string) {
+	m.user_id = &s
+}
+
+// UserID returns the value of the "user_id" field in the mutation.
+func (m *TNUSERMutation) UserID() (r string, exists bool) {
+	v := m.user_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUserID returns the old "user_id" field's value of the TN_USER entity.
+// If the TN_USER object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TNUSERMutation) OldUserID(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUserID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUserID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUserID: %w", err)
+	}
+	return oldValue.UserID, nil
+}
+
+// ResetUserID resets all changes to the "user_id" field.
+func (m *TNUSERMutation) ResetUserID() {
+	m.user_id = nil
+}
+
+// SetUserName sets the "user_name" field.
+func (m *TNUSERMutation) SetUserName(s string) {
+	m.user_name = &s
+}
+
+// UserName returns the value of the "user_name" field in the mutation.
+func (m *TNUSERMutation) UserName() (r string, exists bool) {
+	v := m.user_name
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUserName returns the old "user_name" field's value of the TN_USER entity.
+// If the TN_USER object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TNUSERMutation) OldUserName(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUserName is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUserName requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUserName: %w", err)
+	}
+	return oldValue.UserName, nil
+}
+
+// ResetUserName resets all changes to the "user_name" field.
+func (m *TNUSERMutation) ResetUserName() {
+	m.user_name = nil
+}
+
+// SetPassword sets the "password" field.
+func (m *TNUSERMutation) SetPassword(s string) {
+	m.password = &s
+}
+
+// Password returns the value of the "password" field in the mutation.
+func (m *TNUSERMutation) Password() (r string, exists bool) {
+	v := m.password
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldPassword returns the old "password" field's value of the TN_USER entity.
+// If the TN_USER object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TNUSERMutation) OldPassword(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldPassword is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldPassword requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldPassword: %w", err)
+	}
+	return oldValue.Password, nil
+}
+
+// ResetPassword resets all changes to the "password" field.
+func (m *TNUSERMutation) ResetPassword() {
+	m.password = nil
+}
+
+// SetDelectYn sets the "delect_yn" field.
+func (m *TNUSERMutation) SetDelectYn(s string) {
+	m.delect_yn = &s
+}
+
+// DelectYn returns the value of the "delect_yn" field in the mutation.
+func (m *TNUSERMutation) DelectYn() (r string, exists bool) {
+	v := m.delect_yn
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDelectYn returns the old "delect_yn" field's value of the TN_USER entity.
+// If the TN_USER object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TNUSERMutation) OldDelectYn(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDelectYn is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDelectYn requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDelectYn: %w", err)
+	}
+	return oldValue.DelectYn, nil
+}
+
+// ResetDelectYn resets all changes to the "delect_yn" field.
+func (m *TNUSERMutation) ResetDelectYn() {
+	m.delect_yn = nil
+}
+
+// SetRegDate sets the "reg_date" field.
+func (m *TNUSERMutation) SetRegDate(s string) {
+	m.reg_date = &s
+}
+
+// RegDate returns the value of the "reg_date" field in the mutation.
+func (m *TNUSERMutation) RegDate() (r string, exists bool) {
+	v := m.reg_date
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldRegDate returns the old "reg_date" field's value of the TN_USER entity.
+// If the TN_USER object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TNUSERMutation) OldRegDate(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldRegDate is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldRegDate requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldRegDate: %w", err)
+	}
+	return oldValue.RegDate, nil
+}
+
+// ResetRegDate resets all changes to the "reg_date" field.
+func (m *TNUSERMutation) ResetRegDate() {
+	m.reg_date = nil
+}
+
+// SetUdtDate sets the "udt_date" field.
+func (m *TNUSERMutation) SetUdtDate(s string) {
+	m.udt_date = &s
+}
+
+// UdtDate returns the value of the "udt_date" field in the mutation.
+func (m *TNUSERMutation) UdtDate() (r string, exists bool) {
+	v := m.udt_date
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUdtDate returns the old "udt_date" field's value of the TN_USER entity.
+// If the TN_USER object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TNUSERMutation) OldUdtDate(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUdtDate is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUdtDate requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUdtDate: %w", err)
+	}
+	return oldValue.UdtDate, nil
+}
+
+// ResetUdtDate resets all changes to the "udt_date" field.
+func (m *TNUSERMutation) ResetUdtDate() {
+	m.udt_date = nil
+}
+
+// Where appends a list predicates to the TNUSERMutation builder.
+func (m *TNUSERMutation) Where(ps ...predicate.TN_USER) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the TNUSERMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *TNUSERMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.TN_USER, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *TNUSERMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *TNUSERMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (TN_USER).
+func (m *TNUSERMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *TNUSERMutation) Fields() []string {
+	fields := make([]string, 0, 6)
+	if m.user_id != nil {
+		fields = append(fields, tn_user.FieldUserID)
+	}
+	if m.user_name != nil {
+		fields = append(fields, tn_user.FieldUserName)
+	}
+	if m.password != nil {
+		fields = append(fields, tn_user.FieldPassword)
+	}
+	if m.delect_yn != nil {
+		fields = append(fields, tn_user.FieldDelectYn)
+	}
+	if m.reg_date != nil {
+		fields = append(fields, tn_user.FieldRegDate)
+	}
+	if m.udt_date != nil {
+		fields = append(fields, tn_user.FieldUdtDate)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *TNUSERMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case tn_user.FieldUserID:
+		return m.UserID()
+	case tn_user.FieldUserName:
+		return m.UserName()
+	case tn_user.FieldPassword:
+		return m.Password()
+	case tn_user.FieldDelectYn:
+		return m.DelectYn()
+	case tn_user.FieldRegDate:
+		return m.RegDate()
+	case tn_user.FieldUdtDate:
+		return m.UdtDate()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *TNUSERMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case tn_user.FieldUserID:
+		return m.OldUserID(ctx)
+	case tn_user.FieldUserName:
+		return m.OldUserName(ctx)
+	case tn_user.FieldPassword:
+		return m.OldPassword(ctx)
+	case tn_user.FieldDelectYn:
+		return m.OldDelectYn(ctx)
+	case tn_user.FieldRegDate:
+		return m.OldRegDate(ctx)
+	case tn_user.FieldUdtDate:
+		return m.OldUdtDate(ctx)
+	}
+	return nil, fmt.Errorf("unknown TN_USER field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *TNUSERMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case tn_user.FieldUserID:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUserID(v)
+		return nil
+	case tn_user.FieldUserName:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUserName(v)
+		return nil
+	case tn_user.FieldPassword:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetPassword(v)
+		return nil
+	case tn_user.FieldDelectYn:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDelectYn(v)
+		return nil
+	case tn_user.FieldRegDate:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetRegDate(v)
+		return nil
+	case tn_user.FieldUdtDate:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUdtDate(v)
+		return nil
+	}
+	return fmt.Errorf("unknown TN_USER field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *TNUSERMutation) AddedFields() []string {
+	return nil
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *TNUSERMutation) AddedField(name string) (ent.Value, bool) {
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *TNUSERMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	}
+	return fmt.Errorf("unknown TN_USER numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *TNUSERMutation) ClearedFields() []string {
+	return nil
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *TNUSERMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *TNUSERMutation) ClearField(name string) error {
+	return fmt.Errorf("unknown TN_USER nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *TNUSERMutation) ResetField(name string) error {
+	switch name {
+	case tn_user.FieldUserID:
+		m.ResetUserID()
+		return nil
+	case tn_user.FieldUserName:
+		m.ResetUserName()
+		return nil
+	case tn_user.FieldPassword:
+		m.ResetPassword()
+		return nil
+	case tn_user.FieldDelectYn:
+		m.ResetDelectYn()
+		return nil
+	case tn_user.FieldRegDate:
+		m.ResetRegDate()
+		return nil
+	case tn_user.FieldUdtDate:
+		m.ResetUdtDate()
+		return nil
+	}
+	return fmt.Errorf("unknown TN_USER field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *TNUSERMutation) AddedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *TNUSERMutation) AddedIDs(name string) []ent.Value {
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *TNUSERMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *TNUSERMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *TNUSERMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *TNUSERMutation) EdgeCleared(name string) bool {
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *TNUSERMutation) ClearEdge(name string) error {
+	return fmt.Errorf("unknown TN_USER unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *TNUSERMutation) ResetEdge(name string) error {
+	return fmt.Errorf("unknown TN_USER edge %s", name)
 }

@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"goBack/ent/tn_bbs"
+	"goBack/ent/tn_user"
 	"reflect"
 	"sync"
 
@@ -73,7 +74,8 @@ var (
 func checkColumn(table, column string) error {
 	initCheck.Do(func() {
 		columnCheck = sql.NewColumnCheck(map[string]func(string) bool{
-			tn_bbs.Table: tn_bbs.ValidColumn,
+			tn_bbs.Table:  tn_bbs.ValidColumn,
+			tn_user.Table: tn_user.ValidColumn,
 		})
 	})
 	return columnCheck(table, column)

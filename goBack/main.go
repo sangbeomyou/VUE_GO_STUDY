@@ -18,5 +18,8 @@ func main() {
 	})
 
 	e.GET("/test", handlers.GetUsersHandler)
+
+	e.POST("/user/login", handlers.GetUsersLoginHandler)
+
 	e.Logger.Fatal(e.Start(":8080"))
 }

@@ -14,6 +14,8 @@ type Tx struct {
 	config
 	// TN_BBS is the client for interacting with the TN_BBS builders.
 	TN_BBS *TNBBSClient
+	// TN_USER is the client for interacting with the TN_USER builders.
+	TN_USER *TNUSERClient
 
 	// lazily loaded.
 	client     *Client
@@ -146,6 +148,7 @@ func (tx *Tx) Client() *Client {
 
 func (tx *Tx) init() {
 	tx.TN_BBS = NewTNBBSClient(tx.config)
+	tx.TN_USER = NewTNUSERClient(tx.config)
 }
 
 // txDriver wraps the given dialect.Tx with a nop dialect.Driver implementation.

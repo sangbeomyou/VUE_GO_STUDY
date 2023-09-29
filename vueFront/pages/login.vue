@@ -4,27 +4,32 @@
       <v-col cols="12" sm="8" md="6">
         <v-card class="elevation-12">
           <v-toolbar color="primary" dark flat>
-            <v-toolbar-title>Login</v-toolbar-title>
+            <v-toolbar-title>로그인</v-toolbar-title>
           </v-toolbar>
           <v-card-text>
             <v-text-field
-              label="Username"
-              name="username"
+              label="아이디"
+              id="user_id"
+              name="user_id"
               prepend-icon="mdi-account"
               type="text"
-              v-model="username"
+              :rules="[rules.required]"
+                required
+              v-model="user_id"
             ></v-text-field>
             <v-text-field
-              id="password"
-              label="Password"
+              label="비밀번호"
+              id="Password"
               name="password"
               prepend-icon="mdi-lock"
               type="password"
+              :rules="[rules.required]"
+                required
               v-model="password"
             ></v-text-field>
           </v-card-text>
           <v-card-actions>
-            <v-btn color="primary" @click="login">Login</v-btn>
+            <v-btn color="primary" @click="login">로그인</v-btn>
           </v-card-actions>
         </v-card>
       </v-col>
@@ -33,15 +38,34 @@
 </template>
 
 <script>
+import axios from 'axios'
+
+definePageMeta({
+  layout: false,
+  middleware: false
+});
 export default {
   data: () => ({
-    username: '',
-    password: ''
+    user_id: '',
+    password: '',
+    rules: {
+        required: value => !!value || '빈칸을 입력하세요.',
+      },
   }),
   methods: {
-    login() {
+     async login() {
       // 로그인 로직을 여기에 작성하세요.
-      console.log('Logging in with', this.username, this.password);
+      console.log('Logging in with', this.user_id, this.password);
+
+      try {
+        const response = await axios.post('http://localhost:8080/user/login', {
+          user_id: this.user_id,
+          password: this.password
+        });
+        console.log(response.data);  // 서버로부터의 응답을 콘솔에 출력
+      } catch (error) {
+        console.error(error);  // 에러 출력
+      }
     }
   }
 }

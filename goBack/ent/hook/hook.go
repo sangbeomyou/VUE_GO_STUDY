@@ -20,6 +20,18 @@ func (f TN_BBSFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, erro
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.TNBBSMutation", m)
 }
 
+// The TN_USERFunc type is an adapter to allow the use of ordinary
+// function as TN_USER mutator.
+type TN_USERFunc func(context.Context, *ent.TNUSERMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f TN_USERFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.TNUSERMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.TNUSERMutation", m)
+}
+
 // Condition is a hook condition function.
 type Condition func(context.Context, ent.Mutation) bool
 

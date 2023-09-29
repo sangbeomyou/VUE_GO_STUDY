@@ -8,3 +8,6 @@ import (
 
 // TN_BBS is the predicate function for tn_bbs builders.
 type TN_BBS func(*sql.Selector)
+
+// TN_USER is the predicate function for tn_user builders.
+type TN_USER func(*sql.Selector)

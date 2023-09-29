@@ -25,9 +25,26 @@ var (
 		Columns:    TnBbSsColumns,
 		PrimaryKey: []*schema.Column{TnBbSsColumns[0]},
 	}
+	// TnUseRsColumns holds the columns for the "tn_use_rs" table.
+	TnUseRsColumns = []*schema.Column{
+		{Name: "idx", Type: field.TypeInt, Increment: true},
+		{Name: "user_id", Type: field.TypeString},
+		{Name: "user_name", Type: field.TypeString},
+		{Name: "password", Type: field.TypeString},
+		{Name: "delect_yn", Type: field.TypeString},
+		{Name: "reg_date", Type: field.TypeString},
+		{Name: "udt_date", Type: field.TypeString},
+	}
+	// TnUseRsTable holds the schema information for the "tn_use_rs" table.
+	TnUseRsTable = &schema.Table{
+		Name:       "tn_use_rs",
+		Columns:    TnUseRsColumns,
+		PrimaryKey: []*schema.Column{TnUseRsColumns[0]},
+	}
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
 		TnBbSsTable,
+		TnUseRsTable,
 	}
 )
 

@@ -12,6 +12,7 @@ import (
 	"goBack/ent/migrate"
 
 	"goBack/ent/tn_bbs"
+	"goBack/ent/tn_user"
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect"
@@ -25,6 +26,8 @@ type Client struct {
 	Schema *migrate.Schema
 	// TN_BBS is the client for interacting with the TN_BBS builders.
 	TN_BBS *TNBBSClient
+	// TN_USER is the client for interacting with the TN_USER builders.
+	TN_USER *TNUSERClient
 }
 
 // NewClient creates a new client configured with the given options.
@@ -39,6 +42,7 @@ func NewClient(opts ...Option) *Client {
 func (c *Client) init() {
 	c.Schema = migrate.NewSchema(c.driver)
 	c.TN_BBS = NewTNBBSClient(c.config)
+	c.TN_USER = NewTNUSERClient(c.config)
 }
 
 type (
@@ -122,9 +126,10 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 	cfg := c.config
 	cfg.driver = tx
 	return &Tx{
-		ctx:    ctx,
-		config: cfg,
-		TN_BBS: NewTNBBSClient(cfg),
+		ctx:     ctx,
+		config:  cfg,
+		TN_BBS:  NewTNBBSClient(cfg),
+		TN_USER: NewTNUSERClient(cfg),
 	}, nil
 }
 
@@ -142,9 +147,10 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 	cfg := c.config
 	cfg.driver = &txDriver{tx: tx, drv: c.driver}
 	return &Tx{
-		ctx:    ctx,
-		config: cfg,
-		TN_BBS: NewTNBBSClient(cfg),
+		ctx:     ctx,
+		config:  cfg,
+		TN_BBS:  NewTNBBSClient(cfg),
+		TN_USER: NewTNUSERClient(cfg),
 	}, nil
 }
 
@@ -174,12 +180,14 @@ func (c *Client) Close() error {
 // In order to add hooks to a specific client, call: `client.Node.Use(...)`.
 func (c *Client) Use(hooks ...Hook) {
 	c.TN_BBS.Use(hooks...)
+	c.TN_USER.Use(hooks...)
 }
 
 // Intercept adds the query interceptors to all the entity clients.
 // In order to add interceptors to a specific client, call: `client.Node.Intercept(...)`.
 func (c *Client) Intercept(interceptors ...Interceptor) {
 	c.TN_BBS.Intercept(interceptors...)
+	c.TN_USER.Intercept(interceptors...)
 }
 
 // Mutate implements the ent.Mutator interface.
@@ -187,6 +195,8 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 	switch m := m.(type) {
 	case *TNBBSMutation:
 		return c.TN_BBS.mutate(ctx, m)
+	case *TNUSERMutation:
+		return c.TN_USER.mutate(ctx, m)
 	default:
 		return nil, fmt.Errorf("ent: unknown mutation type %T", m)
 	}
@@ -325,12 +335,145 @@ func (c *TNBBSClient) mutate(ctx context.Context, m *TNBBSMutation) (Value, erro
 	}
 }
 
+// TNUSERClient is a client for the TN_USER schema.
+type TNUSERClient struct {
+	config
+}
+
+// NewTNUSERClient returns a client for the TN_USER from the given config.
+func NewTNUSERClient(c config) *TNUSERClient {
+	return &TNUSERClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `tn_user.Hooks(f(g(h())))`.
+func (c *TNUSERClient) Use(hooks ...Hook) {
+	c.hooks.TN_USER = append(c.hooks.TN_USER, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `tn_user.Intercept(f(g(h())))`.
+func (c *TNUSERClient) Intercept(interceptors ...Interceptor) {
+	c.inters.TN_USER = append(c.inters.TN_USER, interceptors...)
+}
+
+// Create returns a builder for creating a TN_USER entity.
+func (c *TNUSERClient) Create() *TNUSERCreate {
+	mutation := newTNUSERMutation(c.config, OpCreate)
+	return &TNUSERCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of TN_USER entities.
+func (c *TNUSERClient) CreateBulk(builders ...*TNUSERCreate) *TNUSERCreateBulk {
+	return &TNUSERCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *TNUSERClient) MapCreateBulk(slice any, setFunc func(*TNUSERCreate, int)) *TNUSERCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &TNUSERCreateBulk{err: fmt.Errorf("calling to TNUSERClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*TNUSERCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &TNUSERCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for TN_USER.
+func (c *TNUSERClient) Update() *TNUSERUpdate {
+	mutation := newTNUSERMutation(c.config, OpUpdate)
+	return &TNUSERUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *TNUSERClient) UpdateOne(tu *TN_USER) *TNUSERUpdateOne {
+	mutation := newTNUSERMutation(c.config, OpUpdateOne, withTN_USER(tu))
+	return &TNUSERUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *TNUSERClient) UpdateOneID(id int) *TNUSERUpdateOne {
+	mutation := newTNUSERMutation(c.config, OpUpdateOne, withTN_USERID(id))
+	return &TNUSERUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for TN_USER.
+func (c *TNUSERClient) Delete() *TNUSERDelete {
+	mutation := newTNUSERMutation(c.config, OpDelete)
+	return &TNUSERDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *TNUSERClient) DeleteOne(tu *TN_USER) *TNUSERDeleteOne {
+	return c.DeleteOneID(tu.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *TNUSERClient) DeleteOneID(id int) *TNUSERDeleteOne {
+	builder := c.Delete().Where(tn_user.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &TNUSERDeleteOne{builder}
+}
+
+// Query returns a query builder for TN_USER.
+func (c *TNUSERClient) Query() *TNUSERQuery {
+	return &TNUSERQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeTNUSER},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a TN_USER entity by its id.
+func (c *TNUSERClient) Get(ctx context.Context, id int) (*TN_USER, error) {
+	return c.Query().Where(tn_user.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *TNUSERClient) GetX(ctx context.Context, id int) *TN_USER {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *TNUSERClient) Hooks() []Hook {
+	return c.hooks.TN_USER
+}
+
+// Interceptors returns the client interceptors.
+func (c *TNUSERClient) Interceptors() []Interceptor {
+	return c.inters.TN_USER
+}
+
+func (c *TNUSERClient) mutate(ctx context.Context, m *TNUSERMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&TNUSERCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&TNUSERUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&TNUSERUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&TNUSERDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown TN_USER mutation op: %q", m.Op())
+	}
+}
+
 // hooks and interceptors per client, for fast access.
 type (
 	hooks struct {
-		TN_BBS []ent.Hook
+		TN_BBS, TN_USER []ent.Hook
 	}
 	inters struct {
-		TN_BBS []ent.Interceptor
+		TN_BBS, TN_USER []ent.Interceptor
 	}
 )
