@@ -3,6 +3,7 @@
         <v-tabs v-model="tab" bg-color="primary">
             <v-tab to="/home">Home</v-tab>
             <v-tab to="/board">Board</v-tab>
+            <userinfo />
         </v-tabs>
 
         <v-card-text>
@@ -12,6 +13,7 @@
 
         </v-card-text>
     </v-card>
+
 </template>
 
 <script>

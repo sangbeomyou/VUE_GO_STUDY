@@ -1,7 +1,8 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
   css: [
-    'vuetify/lib/styles/main.sass'
+    'vuetify/lib/styles/main.sass',
+    '~/resource/styles/common.css',
  ],
  build: {
     transpile: ['vuetify']

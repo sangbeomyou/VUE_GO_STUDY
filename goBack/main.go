@@ -21,5 +21,7 @@ func main() {
 
 	e.POST("/user/login", handlers.GetUsersLoginHandler)
 
+	e.GET("/bbs/bbsList", handlers.GetBbsHandler)
+
 	e.Logger.Fatal(e.Start(":8080"))
 }

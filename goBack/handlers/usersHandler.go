@@ -60,6 +60,10 @@ func GetUsersLoginHandler(c echo.Context) error {
 			tn_user.UserIDEQ(request.UserID),
 			tn_user.PasswordEQ(utils.HashPassword(request.Password)),
 		).
+		Select(
+			tn_user.FieldUserID,
+			tn_user.FieldUserName,
+		).
 		All(context.Background())
 
 	if err != nil {
@@ -68,6 +72,17 @@ func GetUsersLoginHandler(c echo.Context) error {
 		})
 	}
 
+	//user 빈값 체크
+	if len(user) == 0 {
+		return c.JSON(http.StatusOK, map[string]string{
+			"success": "N",
+			"error":   "No user found",
+		})
+	}
+
 	c.Logger().Info(user)
-	return c.JSON(http.StatusOK, user)
+	return c.JSON(http.StatusOK, models.Response{
+		Success: "Y",
+		Result:  user,
+	})
 }
