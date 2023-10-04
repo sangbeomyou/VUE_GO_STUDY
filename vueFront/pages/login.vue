@@ -20,45 +20,40 @@
     </v-row>
   </v-container>
 </template>
-
-<script>
-import axios from 'axios'
+<script setup>
+import { ref } from 'vue';
+import axios from 'axios';
 import { useAuthStore } from '~/stores/auth';
-const auth = useAuthStore();
-
 
 definePageMeta({
   layout: false,
   middleware: false
 });
 
-export default {
-  data: () => ({
-    user_id: '',
-    password: '',
-    rules: {
-      required: value => !!value || '빈칸을 입력하세요.',
-    },
-  }),
-  methods: {
-    async login() {
-      console.log('Logging in with', this.user_id, this.password);
-      try {
-        const response = await axios.post('http://localhost:8080/user/login', {
-          user_id: this.user_id,
-          password: this.password
-        });
-        console.log(response.data)
-        if (response.data.success === "Y") {
-          auth.login(response.data.result, response.data.token);
-          navigateTo('/home');  
-        } else {
-          alert('아이디와 비밀번호를 확인하세요.'); 
-        }
-      } catch (error) {
-        console.error(error); 
-      }
+const auth = useAuthStore();
+const user_id = ref('');
+const password = ref('');
+const rules = {
+  required: value => !!value || '빈칸을 입력하세요.',
+};
+
+const login = async () => {
+  console.log('Logging in with', user_id.value, password.value);
+  try {
+    const response = await axios.post('http://localhost:8080/user/login', {
+      user_id: user_id.value,
+      password: password.value
+    });
+    console.log(response.data);
+    if (response.data.success === "Y") {
+      auth.login(response.data.result, response.data.token);
+      // navigateTo 함수를 호출하려면 여기에 import하거나 define 해야 합니다.
+      navigateTo('/home');  
+    } else {
+      alert('아이디와 비밀번호를 확인하세요.'); 
     }
+  } catch (error) {
+    console.error(error); 
   }
-}
+};
 </script>

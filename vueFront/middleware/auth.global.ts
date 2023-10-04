@@ -1,8 +1,9 @@
-import { isAuthenticated } from '~/composables/user';
+import { useAuthStore } from '~/stores/auth';
 
 export default defineNuxtRouteMiddleware((to, from) => {
-    // 로그인 권한이 없을때 로그인 페이지 제외
-    if (!isAuthenticated.value && to.path !== '/login') {
-        return navigateTo('/login')
+    const authStore = useAuthStore();
+    
+    if (!authStore.isAuthenticated && to.path !== '/login') {
+        return navigateTo('/login');
     }
-  }) 
+});
