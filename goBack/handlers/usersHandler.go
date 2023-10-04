@@ -4,42 +4,24 @@ import (
 	"context"
 	"goBack/db"
 	"goBack/utils" //
+	"os"
 
-	"goBack/ent/tn_bbs"  // Import the bbs entity
 	"goBack/ent/tn_user" // Import the bbs entity
 	"goBack/models"
 	"log"
 	"net/http"
 
+	"time"
+
+	"github.com/golang-jwt/jwt/v4"
 	"github.com/labstack/echo/v4"
 )
 
-func GetUsersHandler(c echo.Context) error {
-	client, err := db.ConnectDB()
-	if err != nil {
-		return c.JSON(http.StatusInternalServerError, map[string]string{
-			"error": "Failed to connect to database: " + err.Error(),
-		})
-	}
-	defer client.Close()
-
-	bbsList, err := client.TN_BBS.
-		Query().
-		Where(tn_bbs.DelectYnEQ("N")).
-		All(context.Background())
-	if err != nil {
-		return c.JSON(http.StatusInternalServerError, map[string]string{
-			"error": "Failed to query TN_BBS: " + err.Error(),
-		})
-	}
-
-	c.Logger().Info(bbsList)
-	return c.JSON(http.StatusOK, bbsList)
-}
-
+// 로그인
 func GetUsersLoginHandler(c echo.Context) error {
-	// 리퀘스트 값이 없을때
+
 	request := new(models.LoginRequest)
+	// 리퀘스트 값이 없을때
 	if err := c.Bind(request); err != nil {
 		log.Println("Failed to bind request:", err)
 		return c.JSON(http.StatusBadRequest, map[string]string{"status": "bad request"})
@@ -80,9 +62,26 @@ func GetUsersLoginHandler(c echo.Context) error {
 		})
 	}
 
+	// JWT 토큰 생성
+
+	jwtKey := os.Getenv("SECRET_KEY")
+	token := jwt.New(jwt.SigningMethodHS256)
+
+	claims := token.Claims.(jwt.MapClaims)
+	claims["userid"] = user[0].UserID
+	claims["exp"] = time.Now().Add(time.Hour * 24).Unix() //토큰 완료 시간 설정
+
+	t, err := token.SignedString([]byte(jwtKey))
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{
+			"error": "Failed to create the token: " + err.Error(),
+		})
+	}
+
 	c.Logger().Info(user)
-	return c.JSON(http.StatusOK, models.Response{
-		Success: "Y",
-		Result:  user,
+	return c.JSON(http.StatusOK, map[string]interface{}{
+		"success": "Y",
+		"token":   t,
+		"result":  user,
 	})
 }

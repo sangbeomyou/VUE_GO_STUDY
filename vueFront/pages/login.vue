@@ -23,7 +23,8 @@
 
 <script>
 import axios from 'axios'
-import { login } from '~/composables/user';
+import { useAuthStore } from '~/stores/auth';
+const auth = useAuthStore();
 
 
 definePageMeta({
@@ -47,8 +48,9 @@ export default {
           user_id: this.user_id,
           password: this.password
         });
+        console.log(response.data)
         if (response.data.success === "Y") {
-          login(response.data.result);
+          auth.login(response.data.result, response.data.token);
           navigateTo('/home');  
         } else {
           alert('아이디와 비밀번호를 확인하세요.'); 

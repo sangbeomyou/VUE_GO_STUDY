@@ -17,9 +17,9 @@ func main() {
 		return c.String(http.StatusOK, "Hello, World!")
 	})
 
-	e.GET("/test", handlers.GetUsersHandler)
-
 	e.POST("/user/login", handlers.GetUsersLoginHandler)
+
+	e.GET("/user/loginTest", handlers.GetUsersLoginHandler)
 
 	e.GET("/bbs/bbsList", handlers.GetBbsHandler)
 

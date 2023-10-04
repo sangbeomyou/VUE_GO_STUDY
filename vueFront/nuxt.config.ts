@@ -12,5 +12,14 @@ export default defineNuxtConfig({
        'process.env.DEBUG': true,
     }
  },  
+ modules: [
+   '@pinia/nuxt',
+ ],
+ imports: {
+   dirs: ['./stores']
+ },
+ pinia: {
+   autoImports: ['defineStore', 'acceptHMRUpdate']
+ },
   devtools: { enabled: true }
 })
