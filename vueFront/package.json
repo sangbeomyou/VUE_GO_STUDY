@@ -19,6 +19,7 @@
     "@mdi/font": "7.2.96",
     "@pinia/nuxt": "0.4.11",
     "axios": "1.5.1",
+    "firebase": "10.4.0",
     "pinia": "2.1.6",
     "sass": "1.68.0",
     "vuetify": "3.3.19"
