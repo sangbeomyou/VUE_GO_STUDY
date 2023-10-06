@@ -14,6 +14,9 @@
           </v-card-text>
           <v-card-actions>
             <v-btn color="primary" @click="login">로그인</v-btn>
+            <v-spacer></v-spacer>
+            <v-btn color="primary" @click="signup">회원가입</v-btn>
+
           </v-card-actions>
         </v-card>
       </v-col>
@@ -36,6 +39,10 @@ const password = ref('');
 const rules = {
   required: value => !!value || '빈칸을 입력하세요.',
 };
+
+const signup = () => {
+  navigateTo('/signup');  
+}
 
 const login = async () => {
   console.log('Logging in with', user_id.value, password.value);
