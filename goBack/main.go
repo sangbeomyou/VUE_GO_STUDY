@@ -2,6 +2,8 @@ package main
 
 import (
 	"goBack/handlers" //  함수가 있는 패키지 임포트
+	customMiddleware "goBack/middleware"
+
 	"net/http"
 
 	"github.com/labstack/echo/v4"
@@ -11,7 +13,12 @@ import (
 func main() {
 	e := echo.New()
 
-	e.Use(middleware.CORS())
+	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
+		AllowOrigins:     []string{"http://localhost:3000"},
+		AllowCredentials: true,
+	}))
+	// 미들웨어 설정 파이어베이스 토큰 확인용
+	e.Use(customMiddleware.FirebaseAuthentication())
 
 	e.GET("/", func(c echo.Context) error {
 		return c.String(http.StatusOK, "Hello, World!")
@@ -19,9 +26,16 @@ func main() {
 
 	e.POST("/user/login", handlers.GetUsersLoginHandler)
 
-	e.GET("/user/loginTest", handlers.GetUsersLoginHandler)
-
 	e.GET("/bbs/bbsList", handlers.GetBbsHandler)
+
+	e.GET("/InitUser", handlers.GetInitUserInfoHandler)
+
+	//위 경로 미들웨어 파이어 베이스 토큰 미확인
+	publicGroup := e.Group("/public")
+	publicGroup.GET("/", func(c echo.Context) error {
+		return c.String(http.StatusOK, "Hello, World!")
+	})
+	publicGroup.POST("/setToken", handlers.SetTokenHandler) //토큰 쿠키에 세팅
 
 	e.Logger.Fatal(e.Start(":8080"))
 }

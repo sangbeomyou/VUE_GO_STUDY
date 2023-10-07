@@ -8,8 +8,8 @@ export const useAuthStore = defineStore({
   state: () => ({
     user: null,
     loginDate: null,
-    isAuthenticated: false,
-    token: null,
+    isAuthenticated: false, //로그인여부
+    isLoading: true,  // 로딩 상태 추가
   }),
 
   // getters
@@ -19,16 +19,16 @@ export const useAuthStore = defineStore({
 
   // actions
   actions: {
+    setLoading(Loading) {
+      this.isLoading = Loading;
+    },
+
     setUser(newUser) {
       this.user = newUser;
     },
 
     setLoginDate() {
       this.loginDate = new Date().toLocaleString();
-    },
-
-    setToken(newToken) {
-      this.token = newToken;
     },
 
     logout() {
@@ -45,11 +45,10 @@ export const useAuthStore = defineStore({
       this.isAuthenticated = authStatus;
     },
 
-    login(newUser, newToken) {
+    login(newUser) {
       this.setUser(newUser);
       this.setLoginDate();
       this.isAuthenticated = true;
-      this.setToken(newToken);
     },
   },
 });

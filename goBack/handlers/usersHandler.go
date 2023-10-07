@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"context"
+	"fmt"
 	"goBack/db"
 	"goBack/utils" //
 	"os"
@@ -13,6 +14,7 @@ import (
 
 	"time"
 
+	"firebase.google.com/go/v4/auth"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/labstack/echo/v4"
 )
@@ -84,4 +86,55 @@ func GetUsersLoginHandler(c echo.Context) error {
 		"token":   t,
 		"result":  user,
 	})
+}
+
+func SetTokenHandler(c echo.Context) error {
+	var body map[string]string
+	if err := c.Bind(&body); err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{
+			"error": "Invalid data",
+		})
+	}
+
+	token := body["token"]
+	if token == "" {
+		return c.JSON(http.StatusBadRequest, map[string]string{
+			"error": "Token is missing",
+		})
+	}
+
+	// HTTPOnly 쿠키로 토큰 설정
+	c.SetCookie(&http.Cookie{
+		Name:     "authToken",
+		Value:    token,
+		HttpOnly: true,
+		Path:     "/", // 모든 경로에서 쿠키가 유효하게 설정
+	})
+
+	return c.JSON(http.StatusOK, map[string]string{
+		"message": token,
+	})
+}
+
+func GetInitUserInfoHandler(c echo.Context) error {
+	// 컨텍스트에서 Firebase Auth 클라이언트 가져오기
+	client, ok := c.Get("firebase_auth_client").(*auth.Client)
+	if !ok {
+		return c.JSON(http.StatusBadRequest, "Failed to retrieve Firebase Auth client")
+	}
+
+	// 컨텍스트에서 uid 가져오기
+	uid, ok := c.Get("uid").(string)
+	if !ok {
+		return c.JSON(http.StatusBadRequest, "Invalid UID")
+	}
+
+	// UID를 사용하여 Firebase에서 사용자 정보 가져오기
+	userInfo, err := client.GetUser(c.Request().Context(), uid)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, fmt.Sprintf("Error fetching user info for UID: %s", uid))
+	}
+
+	// 사용자 정보를 응답으로 반환
+	return c.JSON(http.StatusOK, userInfo)
 }
