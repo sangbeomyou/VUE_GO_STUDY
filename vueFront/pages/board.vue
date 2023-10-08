@@ -4,9 +4,9 @@
     <v-list v-else two-line>
       <v-list-item v-for="bbs in bbsList" :key="bbs.id">
         <v-list-item-content>
-          <v-list-item-title>{{ bbs.title }} | {{ bbs.user_id }} | {{ bbs.reg_date }}</v-list-item-title>
+          <v-list-item-title>{{ bbs.Title }} | {{ bbs.UserID }} | {{ bbs.RegDate }}</v-list-item-title>
           <v-list-item-subtitle>
-            {{ bbs.content }}
+            {{ bbs.Content }}
           </v-list-item-subtitle>
         </v-list-item-content>
         <v-list-item-action>
@@ -28,7 +28,8 @@ export default {
   },
   async created() {
     try {
-      const response = await axios.get('http://localhost:8080/bbs/bbsList')
+      const response = await axios.get('http://localhost:8080/bbs/bbsList', {withCredentials: true})
+
       if (response.data.success === "Y") {
         console.log(response.data.result)
         this.bbsList = response.data.result
