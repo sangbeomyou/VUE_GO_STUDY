@@ -2,7 +2,7 @@ package models
 
 // TN_BBS is the model entity for the TN_BBS schema.
 type TN_BBS struct {
-	ID       uint   `gorm:"primary_key"`
+	Idx      uint   `gorm:"primaryKey;column:idx"`
 	UserID   string `gorm:"column:user_id"`
 	UserName string `gorm:"column:user_name"`
 	Title    string `gorm:"column:title"`

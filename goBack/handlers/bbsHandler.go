@@ -18,7 +18,7 @@ func GetBbsHandler(c echo.Context) error {
 	}
 
 	var bbsList []models.TN_BBS
-	if err := client.Where("delete_yn = ?", "N").Select("user_id, user_name, title, content, reg_date").Find(&bbsList).Error; err != nil {
+	if err := client.Where("delete_yn = ?", "N").Select("idx, user_id, user_name, title, content, reg_date").Find(&bbsList).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return c.JSON(http.StatusNotFound, map[string]string{
 				"error": "No records found",

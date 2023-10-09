@@ -29,7 +29,9 @@ func FirebaseAuthentication() echo.MiddlewareFunc {
 			// 쿠키에서 "authToken" 이름의 값을 읽어옵니다.
 			cookie, err := c.Cookie("authToken")
 			if err != nil || cookie.Value == "" {
-				return c.JSON(http.StatusUnauthorized, "missing token in cookie")
+				log.Printf("missing token in cookie")
+				// 쿠키없으면 로그인
+				return c.Redirect(http.StatusTemporaryRedirect, "http://localhost:3000/login")
 			}
 
 			// 쿠키의 값을 ID 토큰으로 사용합니다.
@@ -58,7 +60,8 @@ func FirebaseAuthentication() echo.MiddlewareFunc {
 			tokenInfo, err := client.VerifyIDToken(ctx, idToken)
 			if err != nil {
 				log.Printf("Error verifying ID token: %v", err)
-				return c.JSON(http.StatusUnauthorized, "invalid token")
+				//로그인 페이지로
+				return c.Redirect(http.StatusTemporaryRedirect, "http://localhost:3000/login")
 			}
 
 			// 검증된 토큰의 사용자 UID를 컨텍스트에 저장합니다.

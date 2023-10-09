@@ -1,19 +1,32 @@
 <template>
   <div>
     <div v-if="isLoading">로딩 중...</div>
-    <v-list v-else two-line>
-      <v-list-item v-for="bbs in bbsList" :key="bbs.id">
-        <v-list-item-content>
-          <v-list-item-title>{{ bbs.Title }} | {{ bbs.UserID }} | {{ bbs.RegDate }}</v-list-item-title>
-          <v-list-item-subtitle>
-            {{ bbs.Content }}
-          </v-list-item-subtitle>
-        </v-list-item-content>
-        <v-list-item-action>
-          <v-icon>mdi-pencil</v-icon>
-        </v-list-item-action>
-      </v-list-item>
-    </v-list>
+    <v-table>
+      <thead>
+        <tr>
+          <th class="text-left">
+            번호
+          </th>
+          <th class="text-left">
+            제목
+          </th>
+          <th class="text-left">
+            작성자
+          </th>
+          <th class="text-left">
+            작성 시간
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr v-for="bbs in bbsList" :key="bbs.id">
+          <td>{{ bbs.ID }}</td>
+          <td>{{ bbs.Title }}</td>
+          <td>{{ bbs.UserName }}</td>
+          <td>{{ bbs.RegDate }}</td>
+        </tr>
+      </tbody>
+    </v-table>
   </div>
 </template>
 <script>
@@ -23,21 +36,23 @@ export default {
   data() {
     return {
       isLoading: true, // 데이터 로딩 상태
-      posts: []
+      bbsList: []
     }
   },
   async created() {
     try {
-      const response = await axios.get('http://localhost:8080/bbs/bbsList', {withCredentials: true})
-
+      const response = await axios.get('http://localhost:8080/bbs/bbsList', { withCredentials: true })
       if (response.data.success === "Y") {
         console.log(response.data.result)
         this.bbsList = response.data.result
+      } else {
+        this.bbsList = []  // 실패한 경우 초기화
       }
       this.isLoading = false // 데이터 로딩 완료
     } catch (error) {
       console.error('API 호출 오류:', error)
       this.isLoading = false // 데이터 로딩 실패
+      this.bbsList = []      // 오류 발생 시 초기화
     }
   }
 }
