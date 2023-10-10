@@ -19,9 +19,9 @@
         </tr>
       </thead>
       <tbody>
-        <tr v-for="bbs in bbsList" :key="bbs.id">
-          <td>{{ bbs.ID }}</td>
-          <td><NuxtLink :to="{ name: 'board-id', params: { id: bbs.ID } }">{{ bbs.Title }}</NuxtLink></td>
+        <tr v-for="bbs in bbsList" :key="bbs.Idx">
+          <td>{{ bbs.Idx }}</td>
+          <td><NuxtLink :to="{ name: 'board-idx', params: { idx: bbs.Idx } }">{{ bbs.Title }}</NuxtLink></td>
           <td>{{ bbs.UserName }}</td>
           <td>{{ bbs.RegDate }}</td>
         </tr>

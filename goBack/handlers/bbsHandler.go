@@ -36,6 +36,36 @@ func GetBbsHandler(c echo.Context) error {
 	})
 }
 
+func GetBbsInfoHandler(c echo.Context) error {
+	client, err := db.ConnectDB() // Gorm으로 데이터베이스 연결을 설정한다고 가정합니다.
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{
+			"error": "Failed to connect to database: " + err.Error(),
+		})
+	}
+
+	// URL에서 idx 파라미터를 가져옵니다.
+	idx := c.Param("idx")
+
+	var bbs models.TN_BBS
+	if err := client.Where("delete_yn = ? AND idx = ?", "N", idx).Select("idx, user_id, user_name, title, content, reg_date").First(&bbs).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return c.JSON(http.StatusNotFound, map[string]string{
+				"error": "No records found for idx: " + idx,
+			})
+		}
+		return c.JSON(http.StatusInternalServerError, map[string]string{
+			"error": "Failed to query TN_BBS: " + err.Error(),
+		})
+	}
+
+	c.Logger().Info(bbs)
+	return c.JSON(http.StatusOK, models.Response{
+		Success: "Y",
+		Result:  bbs, // 단일 게시물만 반환
+	})
+}
+
 // package handlers
 
 // import (

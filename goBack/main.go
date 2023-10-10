@@ -25,8 +25,9 @@ func main() {
 	})
 
 	// e.POST("/user/login", handlers.GetUsersLoginHandler)
-
-	e.GET("/bbs/bbsList", handlers.GetBbsHandler)
+	bbsGroup := e.Group("/bbs")
+	bbsGroup.GET("/bbsInfo/:idx", handlers.GetBbsInfoHandler)
+	bbsGroup.GET("/bbsList", handlers.GetBbsHandler)
 
 	e.GET("/InitUser", handlers.GetInitUserInfoHandler)
 
