@@ -1,6 +1,8 @@
 <template>
   <div>
-    <div v-if="isLoading">로딩 중...</div>
+    <div v-if="isLoading">
+      <v-progress-circular indeterminate></v-progress-circular>
+    </div>
     <v-table>
       <thead>
         <tr>
@@ -21,13 +23,19 @@
       <tbody>
         <tr v-for="bbs in bbsList" :key="bbs.Idx">
           <td>{{ bbs.Idx }}</td>
-          <td><NuxtLink :to="{ name: 'board-idx', params: { idx: bbs.Idx } }">{{ bbs.Title }}</NuxtLink></td>
+          <td>
+            <NuxtLink :to="{ name: 'board-idx', params: { idx: bbs.Idx } }">{{ bbs.Title }}</NuxtLink>
+          </td>
           <td>{{ bbs.UserName }}</td>
           <td>{{ bbs.RegDate }}</td>
         </tr>
       </tbody>
     </v-table>
-  </div>
+    <NuxtLink :to="{ name: 'board-write'}">
+      <v-btn color="primary">글쓰기</v-btn>
+    </NuxtLink>
+    </div>
+
 </template>
 <script>
 import axios from 'axios'
@@ -46,6 +54,7 @@ export default {
         console.log(response.data.result)
         this.bbsList = response.data.result
       } else {
+        console.log(response)
         this.bbsList = []  // 실패한 경우 초기화
       }
       this.isLoading = false // 데이터 로딩 완료
