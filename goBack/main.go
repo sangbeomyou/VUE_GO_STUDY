@@ -28,6 +28,8 @@ func main() {
 	bbsGroup := e.Group("/bbs")
 	bbsGroup.GET("/bbsInfo/:idx", handlers.GetBbsInfoHandler)
 	bbsGroup.GET("/bbsList", handlers.GetBbsHandler)
+	bbsGroup.POST("/write", handlers.PostBbsWriteHandler)
+	bbsGroup.POST("/delete", handlers.PostBbsDeleteHandler)
 
 	e.GET("/InitUser", handlers.GetInitUserInfoHandler)
 

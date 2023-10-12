@@ -4,6 +4,7 @@ import (
 	"goBack/db"
 	"goBack/models"
 	"net/http"
+	"time"
 
 	"github.com/labstack/echo/v4"
 	"gorm.io/gorm"
@@ -63,6 +64,72 @@ func GetBbsInfoHandler(c echo.Context) error {
 	return c.JSON(http.StatusOK, models.Response{
 		Success: "Y",
 		Result:  bbs, // 단일 게시물만 반환
+	})
+}
+
+func PostBbsWriteHandler(c echo.Context) error {
+	client, err := db.ConnectDB()
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{
+			"error": "Failed to connect to database: " + err.Error(),
+		})
+	}
+
+	var bbs models.TN_BBS
+
+	// 요청 본문에서 정보 가져오기
+	if err := c.Bind(&bbs); err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{
+			"error": "Failed to bind request body: " + err.Error(),
+		})
+	}
+	// 나머지 설정
+	bbs.RegDate = time.Now().Format("2006-01-02 15:04:05")
+	bbs.DeleteYn = "N"
+
+	// 게시물 추가
+	if err := client.Create(&bbs).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return c.JSON(http.StatusInternalServerError, map[string]string{
+				"error": "Failed to insert into TN_BBS: " + err.Error(),
+			})
+		}
+	}
+	return c.JSON(http.StatusOK, map[string]string{
+		"Success": "Y",
+	})
+}
+
+func PostBbsDeleteHandler(c echo.Context) error {
+	client, err := db.ConnectDB()
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{
+			"error": "Failed to connect to database: " + err.Error(),
+		})
+	}
+
+	var req struct {
+		Idx string `json:"Idx"`
+	}
+
+	// 요청 본문에서 정보 가져오기
+	if err := c.Bind(&req); err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{
+			"error": "Failed to bind request body: " + err.Error(),
+		})
+	}
+
+	// idx로 delete_yn 필드를 'Y'로 업데이트
+	if err := client.Model(&models.TN_BBS{}).Where("idx = ?", req.Idx).Update("delete_yn", "Y").Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return c.JSON(http.StatusInternalServerError, map[string]string{
+				"error": "Failed to mark TN_BBS as deleted: " + err.Error(),
+			})
+		}
+	}
+
+	return c.JSON(http.StatusOK, map[string]string{
+		"Success": "Y",
 	})
 }
 
