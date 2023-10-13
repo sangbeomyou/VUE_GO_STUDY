@@ -25,7 +25,7 @@
           </v-card-text>
           <!-- 내 아이디일 경우 수정버튼 활성 -->
           <v-card-actions v-if="bbs.UserID === user.uid">
-            <v-btn color="primary" @click="navigateToWrite">수정하기</v-btn>
+            <v-btn color="primary" @click="navigateToEdit">수정하기</v-btn>
             <v-btn color="error" @click="deleteBbs">삭제하기</v-btn>
           </v-card-actions>
         </v-card>
@@ -94,9 +94,8 @@ const deleteBbs = async () => {
     }
   }
 }
-const navigateToWrite = () => {
-    // idx 값과 함께 /bbs/write 페이지로 이동
-    navigateTo(`/bbs/write${idx.value}`);
+const navigateToEdit = () => {
+    navigateTo(`/board/write/${idx.value}`);
 }
 
 

@@ -100,6 +100,46 @@ func PostBbsWriteHandler(c echo.Context) error {
 	})
 }
 
+func PostBbsEditHandler(c echo.Context) error {
+	client, err := db.ConnectDB()
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{
+			"error": "Failed to connect to database: " + err.Error(),
+		})
+	}
+
+	var bbs models.TN_BBS_API
+
+	// 요청 본문에서 정보 가져오기
+	if err := c.Bind(&bbs); err != nil {
+		return c.JSON(http.StatusOK, map[string]string{
+			"error": "Failed to bind request body: " + err.Error(),
+		})
+	}
+	// 나머지 설정
+	bbs.UpdDate = time.Now().Format("2006-01-02 15:04:05")
+
+	// 게시물 업데이트
+	if err := client.Model(&models.TN_BBS{}).Where("idx = ?", bbs.Idx).Updates(models.TN_BBS{
+		Title:   bbs.Title,
+		Content: bbs.Content,
+		UpdDate: bbs.UpdDate,
+	}).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return c.JSON(http.StatusNotFound, map[string]string{
+				"error": "Failed to update TN_BBS: Record not found",
+			})
+		}
+		return c.JSON(http.StatusInternalServerError, map[string]string{
+			"error": "Failed to update TN_BBS: " + err.Error(),
+		})
+	}
+
+	return c.JSON(http.StatusOK, map[string]string{
+		"Success": "Y",
+	})
+}
+
 func PostBbsDeleteHandler(c echo.Context) error {
 	client, err := db.ConnectDB()
 	if err != nil {

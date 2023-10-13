@@ -30,6 +30,7 @@ func main() {
 	bbsGroup.GET("/bbsList", handlers.GetBbsHandler)
 	bbsGroup.POST("/write", handlers.PostBbsWriteHandler)
 	bbsGroup.POST("/delete", handlers.PostBbsDeleteHandler)
+	bbsGroup.POST("/edit", handlers.PostBbsEditHandler)
 
 	e.GET("/InitUser", handlers.GetInitUserInfoHandler)
 

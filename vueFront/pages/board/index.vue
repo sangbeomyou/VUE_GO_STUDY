@@ -31,7 +31,7 @@
         </tr>
       </tbody>
     </v-table>
-    <NuxtLink :to="{ name: 'board-write'}">
+    <NuxtLink :to="{ name: 'board-write' }">
       <v-btn color="primary">글쓰기</v-btn>
     </NuxtLink>
     </div>
