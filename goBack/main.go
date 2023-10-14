@@ -15,8 +15,10 @@ func main() {
 
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
 		AllowOrigins:     []string{"http://localhost:3000"},
+		AllowMethods:     []string{echo.GET, echo.PUT, echo.POST, echo.DELETE},
 		AllowCredentials: true,
 	}))
+
 	// 미들웨어 설정 파이어베이스 토큰 확인용
 	e.Use(customMiddleware.FirebaseAuthentication())
 
@@ -40,7 +42,7 @@ func main() {
 		return c.String(http.StatusOK, "Hello, World!")
 	})
 	publicGroup.POST("/setToken", handlers.SetTokenHandler) //토큰 쿠키에 세팅
-	publicGroup.GET("/Logout", handlers.GetLogoutHandler)   //로그아웃 쿠키 지우기
+	publicGroup.GET("/logout", handlers.GetLogoutHandler)   //로그아웃 쿠키 지우기
 
 	e.Logger.Fatal(e.Start(":8080"))
 }
