@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"fmt"
+	"time"
 
 	"net/http"
 
@@ -98,7 +99,9 @@ func SetTokenHandler(c echo.Context) error {
 		Name:     "authToken",
 		Value:    token,
 		HttpOnly: true,
-		Path:     "/", // 모든 경로에서 쿠키가 유효하게 설정
+		SameSite: http.SameSiteStrictMode,        // CSRF 방지
+		Expires:  time.Now().Add(24 * time.Hour), // 24시간 후 만료
+		Path:     "/",                            // 모든 경로에서 쿠키가 유효하게 설정
 	})
 
 	return c.JSON(http.StatusOK, map[string]string{
@@ -127,4 +130,19 @@ func GetInitUserInfoHandler(c echo.Context) error {
 
 	// 사용자 정보를 응답으로 반환
 	return c.JSON(http.StatusOK, userInfo)
+}
+
+func GetLogoutHandler(c echo.Context) error {
+	// 쿠키 만료 시간을 현재 시간보다 이전으로 설정
+	c.SetCookie(&http.Cookie{
+		Name:     "authToken",
+		Value:    "",
+		HttpOnly: true,
+		Expires:  time.Unix(0, 0),
+		Path:     "/",
+	})
+
+	return c.JSON(http.StatusOK, map[string]string{
+		"message": "Logged out successfully",
+	})
 }

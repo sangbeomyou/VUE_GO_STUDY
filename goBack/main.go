@@ -40,6 +40,7 @@ func main() {
 		return c.String(http.StatusOK, "Hello, World!")
 	})
 	publicGroup.POST("/setToken", handlers.SetTokenHandler) //토큰 쿠키에 세팅
+	publicGroup.GET("/Logout", handlers.GetLogoutHandler)   //로그아웃 쿠키 지우기
 
 	e.Logger.Fatal(e.Start(":8080"))
 }

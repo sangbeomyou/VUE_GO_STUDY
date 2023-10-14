@@ -15,4 +15,5 @@ const auth = useAuthStore();
 const user = auth.user;
 const loginDate = auth.loginDate;
 const logout = auth.logout;
+
 </script>
