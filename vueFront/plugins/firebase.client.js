@@ -10,7 +10,6 @@ export default defineNuxtPlugin(async(nuxtApp) => {
   const app = initializeApp(firebaseConfig);
 
   const analytics = getAnalytics(app);
-  console.log(getApps().length)
   console.log(app)
 
   if (!getApps().length) {

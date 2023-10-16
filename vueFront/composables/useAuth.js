@@ -12,6 +12,7 @@ export default function useFirebase() {
       onAuthStateChanged(auth, (firebaseUser) => {
         user.value = firebaseUser;
       });
+      console.log(user);
     });
   }
 

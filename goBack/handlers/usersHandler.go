@@ -140,6 +140,7 @@ func GetLogoutHandler(c echo.Context) error {
 		HttpOnly: true,
 		Expires:  time.Unix(0, 0),
 		Path:     "/",
+		SameSite: http.SameSiteStrictMode,
 	})
 
 	return c.JSON(http.StatusOK, map[string]string{

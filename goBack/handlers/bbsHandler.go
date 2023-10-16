@@ -4,6 +4,7 @@ import (
 	"goBack/db"
 	"goBack/models"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/labstack/echo/v4"
@@ -11,29 +12,62 @@ import (
 )
 
 func GetBbsHandler(c echo.Context) error {
-	client, err := db.ConnectDB() // Gorm으로 데이터베이스 연결을 설정한다고 가정합니다.
+	client, err := db.ConnectDB()
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, map[string]string{
-			"error": "Failed to connect to database: " + err.Error(),
+		return c.JSON(http.StatusOK, map[string]interface{}{
+			"success": "N",
+			"error":   "Failed to connect to database: " + err.Error(),
 		})
+	}
+
+	// 쿼리 파라미터에서 page와 limit 값을 가져옵니다.
+	pageStr := c.QueryParam("page")
+	limitStr := c.QueryParam("limit")
+
+	// page와 limit을 정수로 변환합니다. 오류가 있을 경우 기본값을 설정할 수 있습니다.
+	page, err := strconv.Atoi(pageStr)
+	if err != nil || page < 1 {
+		page = 1 // 기본 페이지 값 설정
+	}
+	limit, err := strconv.Atoi(limitStr)
+	if err != nil || limit < 1 {
+		limit = 10 // 기본 limit 값 설정
 	}
 
 	var bbsList []models.TN_BBS
-	if err := client.Where("delete_yn = ?", "N").Select("idx, user_id, user_name, title, content, reg_date").Find(&bbsList).Error; err != nil {
-		if err == gorm.ErrRecordNotFound {
-			return c.JSON(http.StatusNotFound, map[string]string{
-				"error": "No records found",
-			})
-		}
-		return c.JSON(http.StatusInternalServerError, map[string]string{
-			"error": "Failed to query TN_BBS: " + err.Error(),
+	var count int64
+	offset := (page - 1) * limit // offset 계산
+
+	// 먼저, 전체 게시글의 수를 가져옵니다.
+	if result := client.Model(&models.TN_BBS{}).Where("delete_yn = ?", "N").Count(&count); result.Error != nil {
+		return c.JSON(http.StatusOK, map[string]interface{}{
+			"success": "N",
+			"error":   "Failed to count TN_BBS: " + result.Error.Error(),
 		})
 	}
 
-	c.Logger().Info(bbsList)
-	return c.JSON(http.StatusOK, models.Response{
-		Success: "Y",
-		Result:  bbsList,
+	// 게시글을 limit와 offset을 이용하여 불러옵니다.
+	if result := client.Where("delete_yn = ?", "N").Select("idx, user_id, user_name, title, content, reg_date").
+		Offset(offset).Limit(limit).Find(&bbsList); result.Error != nil {
+		if result.Error == gorm.ErrRecordNotFound {
+			return c.JSON(http.StatusOK, map[string]interface{}{
+				"success": "N",
+				"error":   "No records found",
+			})
+		}
+		return c.JSON(http.StatusOK, map[string]interface{}{
+			"success": "N",
+			"error":   "Failed to query TN_BBS: " + result.Error.Error(),
+		})
+	}
+
+	// 정상적으로 처리되었을 경우, 데이터와 함께 전체 페이지 수와 현재 페이지 번호를 클라이언트에 반환합니다.
+	return c.JSON(http.StatusOK, map[string]interface{}{
+		"success": "Y",
+		"result":  bbsList,
+		"total":   count,
+		"page":    page,
+		"pages":   (int(count) + limit - 1) / limit, // 전체 페이지 수 계산
 	})
 }
 
