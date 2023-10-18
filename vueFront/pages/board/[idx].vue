@@ -1,104 +1,97 @@
 <template>
-  <v-container>
-    <v-row v-if="isLoading" justify="center">
-      <v-col cols="12" class="text-center">
-        <v-progress-circular indeterminate></v-progress-circular>
-      </v-col>
-    </v-row>
+  <div>
+    <div v-if="isLoading">
+      <v-progress-circular indeterminate></v-progress-circular>
+    </div>
+    <div class="text-end"> <!-- text-end 클래스를 사용하여 내용을 오른쪽 정렬 -->
+      <NuxtLink :to="{ name: 'board-write' }">
+        <v-btn color="primary">글쓰기</v-btn>
+      </NuxtLink>
+    </div>
+    <v-table>
+      <thead>
+        <tr>
+          <th class="text-left">
+            번호
+          </th>
+          <th class="text-left">
+            제목
+          </th>
+          <th class="text-left">
+            작성자
+          </th>
+          <th class="text-left">
+            작성 시간
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr v-for="bbs in bbsList" :key="bbs.Idx">
+          <td>{{ bbs.Idx }}</td>
+          <td>
+            <NuxtLink :to="{ name: 'board-info-idx', params: { idx: bbs.Idx } }">{{ bbs.Title }}</NuxtLink>
+          </td>
+          <td>{{ bbs.UserName }}</td>
+          <td>{{ bbs.RegDate }}</td>
+        </tr>
+      </tbody>
+    </v-table>
 
-    <v-row v-else>
-      <v-col cols="12">
-        <v-card>
-          <v-card-title>
-            <v-row>
-              <v-col cols="8" class="headline">{{ bbs.Title }}</v-col>
+    <div>
+      <v-pagination
+      v-model="page"
+      :length="pages"
+      @update:model-value ="updatePage"
+      rounded="circle"
+    ></v-pagination>
 
-              <v-col cols="4" class="text-end small-text">
-                <span><strong>작성자:</strong> {{ bbs.UserName }}</span>
-                <span class="ml-4"><strong>작성일:</strong> {{ bbs.RegDate }}</span>
-              </v-col>
-            </v-row>
-          </v-card-title>
-
-          <v-card-text>
-            <v-textarea readonly v-model="bbs.Content"></v-textarea>
-          </v-card-text>
-          <!-- 내 아이디일 경우 수정버튼 활성 -->
-          <v-card-actions v-if="bbs.UserID === user.uid">
-            <v-btn color="primary" @click="navigateToEdit">수정하기</v-btn>
-            <v-btn color="error" @click="deleteBbs">삭제하기</v-btn>
-          </v-card-actions>
-        </v-card>
-      </v-col>
-    </v-row>
-  </v-container>
+    </div>
+  </div>
 </template>
-
-<style>
-/* 작성자와 작성일 텍스트 크기를 줄이는 CSS */
-.small-text {
-  font-size: 0.8rem;
-}
-</style>
-
-
-  
 <script setup>
 import axios from 'axios'
 import { ref } from 'vue'
 import { useRoute } from 'vue-router'
-import { useAuthStore } from '~/stores/auth';
-
-const auth = useAuthStore();
-const user = auth.user;
-
 const route = useRoute()
-const idx = ref(route.params.idx)
 
-const bbs = ref(null)
-const isLoading = ref(true)
+const isLoading = ref(false); // 데이터 로딩 상태
+const bbsList = ref(null); //게시판 리스트
+const page = ref(route.params.idx); //현재 페이지
+const pages = ref(null); //현재 페이지
+const limit = ref(10); //최대 갯수
 
 const fetchData = async () => {
+  isLoading.value = true; // 데이터 로딩 시작
   try {
-    const response = await axios.get(`http://localhost:8080/bbs/bbsInfo/${idx.value}`, { withCredentials: true })
+    // 서버로부터 데이터를 받아오는 부분에서 현재 페이지와 limit 값을 사용합니다.
+    const response = await axios.get('http://localhost:8080/bbs/bbsList', {
+      params: { page: page.value, limit: limit.value },
+      withCredentials: true
+    });
     if (response.data.success === "Y") {
-      console.log(response.data.result)
-      bbs.value = response.data.result;
+      console.log(response.data);
+      pages.value =response.data.pages;
+      bbsList.value = response.data.result;
     } else {
-      bbs.value = [];
+      console.log(response);
+      bbsList.value = []; // 실패한 경우 초기화
     }
-    console.log(response)
   } catch (error) {
-    console.error("Error fetching data:", error)
+    console.error('API 호출 오류:', error); // 콘솔에 오류 메시지 출력
+    bbsList.value = []; // 오류 발생 시 초기화
   } finally {
-    isLoading.value = false
+    isLoading.value = false; // 어떤 상황에서든 로딩 상태는 false로 설정
   }
 }
 
-const deleteBbs = async () => {
-  if (window.confirm("게시글을 정말로 삭제하시겠습니까?")) {
-    try {
-      const response = await axios.post(`http://localhost:8080/bbs/delete`, {
-        Idx: idx.value
-      }, { withCredentials: true });
-      if (response.data.Success === "Y") {
-        alert("게시글이 성공적으로 삭제되었습니다.");
-        navigateTo('/board');
-      } else {
-        console.log(response)
-        alert("게시글 삭제에 실패하였습니다. 다시 시도해주세요.");
-      }
-    } catch (error) {
-      console.error("게시글 삭제 중 에러 발생:", error);
-      alert("게시글 삭제 중 문제가 발생하였습니다. 다시 시도해주세요.");
-    }
-  }
-}
-const navigateToEdit = () => {
-    navigateTo(`/board/write/${idx.value}`);
-}
+// 페이지가 변경 
+const updatePage = (newPage) => {
+  console.log(newPage)
+  page.value = newPage;
+  navigateTo(`/board/${page.value}`);
+  //fetchData();
+};
 
 
-fetchData()
+fetchData();
 </script>
-  
