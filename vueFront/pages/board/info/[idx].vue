@@ -31,7 +31,7 @@
         </v-card>
       </v-col>
     </v-row>
-    <comment :postId="idx.value" />
+    <comment :bbsId="idx.value" />
 
   </v-container>
 </template>
@@ -83,7 +83,7 @@ const deleteBbs = async () => {
       const response = await axios.post(`http://localhost:8080/bbs/delete`, {
         Idx: idx.value
       }, { withCredentials: true });
-      if (response.data.Success === "Y") {
+      if (response.data.success === "Y") {
         alert("게시글이 성공적으로 삭제되었습니다.");
         navigateTo('/board');
       } else {

@@ -58,7 +58,7 @@ const submitPost = async () => {
     try {
         isLoading.value = true; // 로딩 상태 시작
         const response = await axios.post('http://localhost:8080/bbs/write', {
-            Title: title.value,
+            BbsId: title.value,
             Content: content.value,
             UserID: user.uid,
             UserName: user.name
@@ -66,7 +66,7 @@ const submitPost = async () => {
             { withCredentials: true }
         );
 
-        if (response.data.Success === "Y") {
+        if (response.data.success === "Y") {
             alert("게시글이 작성되었습니다.");
             navigateTo('/board');
         } else {

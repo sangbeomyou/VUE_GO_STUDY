@@ -22,16 +22,28 @@
         </v-row>
         <v-row class="mb-3">
             <v-col class="text-end">
-                <v-btn color="primary" @click="postComment">Post Comment</v-btn>
+                <v-btn color="primary" @click="postComment">등록</v-btn>
             </v-col>
         </v-row>
     </div>
 </template>
   
 <script setup>
+import axios from 'axios'
 import { ref } from 'vue';
+import { defineProps } from 'vue';
+import { useAuthStore } from '~/stores/auth';
 
-const newCommentText = ref('');
+const auth = useAuthStore();
+const user = auth.user;
+
+// props 정의
+const props = defineProps({
+    bbsId: Number,
+});
+
+const isLoading = ref(false)
+const newCommentText = ref(''); // 댓글 쓰기
 
 const comments = ref([
     {
@@ -41,20 +53,40 @@ const comments = ref([
 ]);
 
 // 댓글 게시 기능
-const postComment = () => {
+const postComment = async () => {
+
     if (newCommentText.value.trim() === '') {
         alert('댓글을 입력해 주세요');
         return;
     }
 
-    // 서버에 새 댓글을 전송하는 로직을 이곳에 작성해야 함
-    // 이 예제에서는 클라이언트 사이드에서만 처리
+    try {
+        isLoading.value = true; // 로딩 상태 시작
+        const response = await axios.post('http://localhost:8080/bbs/commentWrite', {
+            BbsId: props.bbsId,
+            Content: newCommentText.value,
+            UserID: user.uid,
+            UserName: user.name
+        },
+            { withCredentials: true }
+        );
 
-    comments.value.push({
-        author: 'You', // 실제 사용자 이름으로 교체해야 함
-        content: newCommentText.value.trim(),
-    });
+        if (response.data.success === "Y") {
+            console.log(response.data.result)
 
+            comments.value.push({
+                author: user.name, 
+                content: newCommentText.value.trim(),
+            });
+        } else {
+            alert("댓글 작성이 실패했습니다.")
+        }
+        console.log(response)
+    } catch (error) {
+        console.error("Error fetching data:", error)
+    } finally {
+        isLoading.value = false
+    }
     // 댓글 입력란 초기화
     newCommentText.value = '';
 };

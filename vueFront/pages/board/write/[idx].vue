@@ -89,7 +89,7 @@ const submitPost = async () => {
         },
             { withCredentials: true }
         );
-        if (response.data.Success === "Y") {
+        if (response.data.success === "Y") {
             alert("게시글이 수정되었습니다.");
             navigateTo('/board');
         } else {
