@@ -34,6 +34,7 @@ func main() {
 	bbsGroup.POST("/delete", handlers.PostBbsDeleteHandler)
 	bbsGroup.POST("/edit", handlers.PostBbsEditHandler)
 	bbsGroup.POST("/commentWrite", handlers.PostCommentWriteHandler)
+	bbsGroup.GET("/comment", handlers.GetCommentHandler)
 
 	e.GET("/InitUser", handlers.GetInitUserInfoHandler)
 

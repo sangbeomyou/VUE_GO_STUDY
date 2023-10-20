@@ -30,8 +30,7 @@
   
 <script setup>
 import axios from 'axios'
-import { ref } from 'vue';
-import { defineProps } from 'vue';
+import { onMounted, ref, defineProps } from 'vue';
 import { useAuthStore } from '~/stores/auth';
 
 const auth = useAuthStore();
@@ -39,12 +38,12 @@ const user = auth.user;
 
 // props 정의
 const props = defineProps({
-    bbsId: Number,
+    bbsId: String,
 });
 
 const isLoading = ref(false)
 const newCommentText = ref(''); // 댓글 쓰기
-
+const page = ref(1); //페이징
 const comments = ref([
     {
         author: '테스트',
@@ -52,14 +51,36 @@ const comments = ref([
     },
 ]);
 
+const fetchData = async () => {
+    try {
+        isLoading.value = true; // 로딩 상태 시작
+        const response = await axios.get('http://localhost:8080/bbs/comment', {
+            params: { page: page.value, bbsId: 1 },
+            withCredentials: true
+        }
+        );
+
+        if (response.data.success === "Y") {
+            console.log(response.data.result)
+            // comments.value.push({
+            //     author: user.name, 
+            //     content: newCommentText.value.trim(),
+            // });
+        }
+        console.log(response)
+    } catch (error) {
+        console.error("Error fetching data:", error)
+    } finally {
+        isLoading.value = false
+    }
+};
+
 // 댓글 게시 기능
 const postComment = async () => {
-
     if (newCommentText.value.trim() === '') {
         alert('댓글을 입력해 주세요');
         return;
     }
-
     try {
         isLoading.value = true; // 로딩 상태 시작
         const response = await axios.post('http://localhost:8080/bbs/commentWrite', {
@@ -75,7 +96,7 @@ const postComment = async () => {
             console.log(response.data.result)
 
             comments.value.push({
-                author: user.name, 
+                author: user.name,
                 content: newCommentText.value.trim(),
             });
         } else {
@@ -90,5 +111,8 @@ const postComment = async () => {
     // 댓글 입력란 초기화
     newCommentText.value = '';
 };
+onMounted(async () => {
+    await fetchData();
+});
 </script>
   

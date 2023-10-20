@@ -207,6 +207,75 @@ func PostBbsDeleteHandler(c echo.Context) error {
 	})
 }
 
+// 댓글 불러오기
+func GetCommentHandler(c echo.Context) error {
+	client, err := db.ConnectDB()
+	if err != nil {
+		return c.JSON(http.StatusOK, map[string]interface{}{
+			"success": "N",
+			"error":   "Failed to connect to database: " + err.Error(),
+		})
+	}
+
+	// 쿼리 파라미터에서 page와 limit 값을 가져옵니다.
+	pageStr := c.QueryParam("page")
+	limitStr := c.QueryParam("limit")
+	BbsIdStr := c.QueryParam("bbsId")
+
+	// page와 limit을 정수로 변환합니다. 오류가 있을 경우 기본값을 설정할 수 있습니다.
+	page, err := strconv.Atoi(pageStr)
+	if err != nil || page < 1 {
+		page = 1 // 기본 페이지 값 설정
+	}
+	limit, err := strconv.Atoi(limitStr)
+	if err != nil || limit < 1 {
+		limit = 10 // 기본 limit 값 설정
+	}
+	BbsId, err := strconv.Atoi(BbsIdStr)
+	if err != nil || limit < 1 {
+		return c.JSON(http.StatusOK, map[string]string{
+			"success": "N",
+			"error":   "Failed to bind request body: " + err.Error(),
+		})
+	}
+
+	var commentList []models.TN_COMMENT
+	var count int64
+	offset := (page - 1) * limit // offset 계산
+
+	// 먼저, 전체 게시글의 수를 가져옵니다.
+	if result := client.Model(&models.TN_COMMENT{}).Where("delete_yn = ? AND bbs_id = ?", "N", BbsId).Count(&count); result.Error != nil {
+		return c.JSON(http.StatusOK, map[string]interface{}{
+			"success": "N",
+			"error":   "Failed to count TN_COMMENT: " + result.Error.Error(),
+		})
+	}
+
+	// 게시글을 limit와 offset을 이용하여 불러옵니다.
+	if result := client.Where("delete_yn = ? AND bbs_id = ?", "N", BbsId).Select("idx, bbs_id, user_id, user_name, content, reg_date").
+		Offset(offset).Limit(limit).Find(&commentList); result.Error != nil {
+		if result.Error == gorm.ErrRecordNotFound {
+			return c.JSON(http.StatusOK, map[string]interface{}{
+				"success": "N",
+				"error":   "No records found",
+			})
+		}
+		return c.JSON(http.StatusOK, map[string]interface{}{
+			"success": "N",
+			"error":   "Failed to query TN_COMMENT: " + result.Error.Error(),
+		})
+	}
+
+	// 정상적으로 처리되었을 경우, 데이터와 함께 전체 페이지 수와 현재 페이지 번호를 클라이언트에 반환합니다.
+	return c.JSON(http.StatusOK, map[string]interface{}{
+		"success": "Y",
+		"result":  commentList,
+		"total":   count,
+		"page":    page,
+		"pages":   (int(count) + limit - 1) / limit, // 전체 페이지 수 계산
+	})
+}
+
 // 댓글 작성 부분
 func PostCommentWriteHandler(c echo.Context) error {
 	client, err := db.ConnectDB()
