@@ -31,7 +31,7 @@
         </v-card>
       </v-col>
     </v-row>
-    <comment :bbsId="idx.value" />
+    <comment :bbsId="idx" />
 
   </v-container>
 </template>
@@ -43,8 +43,6 @@
 }
 </style>
 
-
-  
 <script setup>
 import axios from 'axios'
 import { ref } from 'vue'
@@ -54,11 +52,10 @@ import { useAuthStore } from '~/stores/auth';
 const auth = useAuthStore();
 const user = auth.user;
 
-const route = useRoute()
-const idx = ref(route.params.idx)
-
-const bbs = ref(null)
-const isLoading = ref(true)
+const route = useRoute();
+const idx = ref(route.params.idx);
+const bbs = ref(null);
+const isLoading = ref(true);
 
 const fetchData = async () => {
   try {
