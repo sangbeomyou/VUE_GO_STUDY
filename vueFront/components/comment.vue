@@ -40,7 +40,6 @@ import axios from 'axios'
 import { onMounted, ref, defineProps } from 'vue';
 import { useAuthStore } from '~/stores/auth';
 
-
 const auth = useAuthStore();
 const user = auth.user;
 
@@ -53,7 +52,8 @@ const props = defineProps({
 const isLoading = ref(false)
 const newCommentText = ref(''); // 댓글 쓰기
 const page = ref(1); //페이징
-const comments = ref(null); //댓글
+const comments = ref([]); //댓글
+const noMoreData = ref(false); // 더 이상 불러올 데이터가 없음을 떄
 
 // 로그인 사용자 확인
 const isAuthor = (UserID) => {
@@ -62,17 +62,23 @@ const isAuthor = (UserID) => {
 
 //댓글 불러오기
 const fetchData = async () => {
+    if (isLoading.value || noMoreData.value) return; // 추가 데이터가 없으면 종료
+
     isLoading.value = true; // 로딩 상태 시작
     try {
         const response = await axios.get('http://localhost:8080/bbs/comment', {
-            params: { page: page.value, bbsId: props.bbsId },
+            params: { page: page.value, limit: 5, bbsId: props.bbsId },
             withCredentials: true
         }
         );
 
         if (response.data.success === "Y") {
-            console.log(response.data.result)
-            comments.value = response.data.result;
+            if (response.data.result.length) {
+                comments.value.push(...response.data.result);
+                page.value++; // 다음 페이지 준비
+            } else {
+                noMoreData.value = true; // 데이터의 끝에 도달
+            }
         }
         console.log(response)
     } catch (error) {
@@ -107,7 +113,7 @@ const postComment = async () => {
         );
 
         if (response.data.success === "Y") {
-            await fetchData(); // 작성 성공하면 다시 불러오기
+            comments.value = [...comments.value, response.data.result]; // 기존 댓글 배열에 새 댓글 추가
         } else {
             alert("댓글 작성이 실패했습니다.")
         }
@@ -120,7 +126,18 @@ const postComment = async () => {
     // 댓글 입력란 초기화
     newCommentText.value = '';
 };
+
+const handleScroll = () => {
+    if (isLoading.value || noMoreData.value) return;
+    const { scrollTop, scrollHeight, clientHeight } = document.documentElement;
+
+    if (scrollTop + clientHeight >= scrollHeight - 5) {
+        fetchData();
+    }
+};
+
 onMounted(async () => {
+    window.addEventListener('scroll', handleScroll);
     await fetchData();
 });
 </script>

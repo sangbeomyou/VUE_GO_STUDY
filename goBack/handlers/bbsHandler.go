@@ -301,12 +301,14 @@ func PostCommentWriteHandler(c echo.Context) error {
 	// 게시물 추가
 	if err := client.Create(&comment).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
-			return c.JSON(http.StatusInternalServerError, map[string]string{
-				"error": "Failed to insert into TN_BBS: " + err.Error(),
+			return c.JSON(http.StatusOK, map[string]string{
+				"success": "N",
+				"error":   "Failed to insert into TN_COMMENT: " + err.Error(),
 			})
 		}
 	}
-	return c.JSON(http.StatusOK, map[string]string{
+	return c.JSON(http.StatusOK, map[string]interface{}{
 		"success": "Y",
+		"result":  comment, //생성한 객체 보내기
 	})
 }
