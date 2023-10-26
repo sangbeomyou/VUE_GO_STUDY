@@ -14,7 +14,7 @@ type TN_COMMENT struct {
 
 type TN_COMMENT_API struct {
 	Idx      string `json:"idx"`
-	BbsId    string `gorm:"column:bbs_id"`
+	BbsId    string `json:"bbs_id,omitempty"`
 	UserID   string `json:"user_id,omitempty"`
 	UserName string `json:"user_name,omitempty"`
 	Content  string `json:"content"`

@@ -58,7 +58,7 @@ const submitPost = async () => {
     try {
         isLoading.value = true; // 로딩 상태 시작
         const response = await axios.post('http://localhost:8080/bbs/write', {
-            BbsId: title.value,
+            Title: title.value,
             Content: content.value,
             UserID: user.uid,
             UserName: user.name

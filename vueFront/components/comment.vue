@@ -9,18 +9,26 @@
                         <div class="text-end">{{ comment.RegDate }}</div>
                     </v-card-subtitle>
                     <v-card-text class="d-flex justify-space-between align-center">
-                        <div>{{ comment.Content }}</div>
-                        <div>
-                            <v-btn flat class="text-primary" @click="editComment(comment.UserID)"
-                                v-if="isAuthor(comment.UserID)">수정</v-btn>
-                            <v-btn flat class="text-red" @click="deleteComment(comment.UserID)"
-                                v-if="isAuthor(comment.UserID)">삭제</v-btn>
+                        <div v-if="isEdit(comment.Idx)">
+                            {{ comment.Content }}
+                        </div>
+                        <div v-else class="w-100">
+                            <v-textarea v-model="editContents[comment.Idx]" outlined auto-grow solo rows="3" class="w-100" ></v-textarea>
+                            <v-btn @click="editComment(comment.Idx, editContents[comment.Idx])">저장</v-btn>
+                        </div>
+                        <div v-if="isAuthor(comment.UserID) && isEdit(comment.Idx)">
+                            <v-btn flat class="text-primary" @click="startEditing(comment)">수정</v-btn>
+                            <v-btn flat class="text-red" @click="deleteComment(comment.Idx)">삭제</v-btn>
                         </div>
                     </v-card-text>
                     <!-- 대댓글 추가 버튼 또는 다른 인터랙션 요소를 이곳에 배치 -->
                 </v-card>
             </v-col>
         </v-row>
+
+        <v-pagination v-model="page" :length="pages" @update:model-value="updatePage" :total-visible="5"
+            rounded="circle"></v-pagination>
+
         <!-- 댓글 입력 섹션 -->
         <v-row class="my-3">
             <v-col>
@@ -37,7 +45,7 @@
   
 <script setup>
 import axios from 'axios'
-import { onMounted, ref, defineProps } from 'vue';
+import { onMounted, reactive, ref, defineProps } from 'vue';
 import { useAuthStore } from '~/stores/auth';
 
 const auth = useAuthStore();
@@ -52,8 +60,12 @@ const props = defineProps({
 const isLoading = ref(false)
 const newCommentText = ref(''); // 댓글 쓰기
 const page = ref(1); //페이징
-const comments = ref([]); //댓글
-const noMoreData = ref(false); // 더 이상 불러올 데이터가 없음을 떄
+const pages = ref(null); //전체 페이지
+const comments = ref(null); //댓글
+const limit = ref(5); //보여주는 댓글 수
+const total = ref(null); //전체 댓글 수
+const editingIdx = ref(null); //수정할 댓글 아이디
+const editContents = ref({}); // 수정 댓글
 
 // 로그인 사용자 확인
 const isAuthor = (UserID) => {
@@ -62,22 +74,22 @@ const isAuthor = (UserID) => {
 
 //댓글 불러오기
 const fetchData = async () => {
-    if (isLoading.value || noMoreData.value) return; // 추가 데이터가 없으면 종료
+    if (isLoading.value) return;
 
     isLoading.value = true; // 로딩 상태 시작
     try {
         const response = await axios.get('http://localhost:8080/bbs/comment', {
-            params: { page: page.value, limit: 5, bbsId: props.bbsId },
+            params: { page: page.value, limit: limit.value, bbsId: props.bbsId },
             withCredentials: true
         }
         );
 
         if (response.data.success === "Y") {
             if (response.data.result.length) {
-                comments.value.push(...response.data.result);
-                page.value++; // 다음 페이지 준비
-            } else {
-                noMoreData.value = true; // 데이터의 끝에 도달
+                comments.value = response.data.result;
+                page.value = response.data.page; // 페이지 세팅
+                pages.value = response.data.pages; // 전체 페이지 세팅
+                total.value = response.data.total; // 페이지 세팅
             }
         }
         console.log(response)
@@ -87,10 +99,57 @@ const fetchData = async () => {
         isLoading.value = false
     }
 };
+
+
+// 댓글 페이지가 변경 
+const updatePage = (newPage) => {
+    console.log(newPage)
+    page.value = newPage;
+    fetchData(); //댓글 다시 불러오기
+};
+
 //댓글 수정하기
-const editComment = async (UserID) => {
-    console.log(UserID)
+const editComment = async (Idx, Content) => {
+    if (!Content.trim()) {
+        alert("댓글을 입력해주세요.");
+        return;
+    }
+
+    // 데이터를 서버로 전송
+    try {
+        isLoading.value = true; // 로딩 상태 시작
+        const response = await axios.post('http://localhost:8080/bbs/commentEdit', {
+            Idx : String(Idx),
+            Content: Content,
+        },
+            { withCredentials: true }
+        );
+        console.log(response.data)
+        if (response.data.success === "Y") {
+            alert("댓글이 수정되었습니다.");
+            editingIdx.value = null; // 댓글 수정 창 종료
+            isLoading.value = false; // 로딩 상태 종료
+            fetchData(); 
+        } else {
+            alert("댓글 수정에 실패하였습니다. 다시 시도해주세요.");
+        }
+    } catch (error) {
+        console.error("댓글 작성 중 에러 발생:", error);
+        alert("댓글 작성 중 문제가 발생하였습니다. 다시 시도해주세요.");
+    } finally {
+        isLoading.value = false; // 로딩 상태 종료
+    }
 }
+
+const startEditing = (comment) => {
+    editingIdx.value = comment.Idx; // 수정할 댓글 idx 세팅
+    editContents.value[comment.Idx] = comment.Content; // 수정할 댓글 세팅
+}
+// 수정 아이디 확인
+const isEdit = (Idx) => {
+    return editingIdx.value !== Idx;
+};
+
 //댓글 삭제
 const deleteComment = async (UserID) => {
     console.log(UserID)
@@ -113,7 +172,12 @@ const postComment = async () => {
         );
 
         if (response.data.success === "Y") {
-            comments.value = [...comments.value, response.data.result]; // 기존 댓글 배열에 새 댓글 추가
+            isLoading.value = false
+            // 배수로 딱 맞아떨어지면 다음 페이지를 보여줘야함
+            if (total.value % limit.value === 0) {
+                pages.value += 1;
+            }
+            updatePage(pages.value)
         } else {
             alert("댓글 작성이 실패했습니다.")
         }
@@ -127,17 +191,7 @@ const postComment = async () => {
     newCommentText.value = '';
 };
 
-const handleScroll = () => {
-    if (isLoading.value || noMoreData.value) return;
-    const { scrollTop, scrollHeight, clientHeight } = document.documentElement;
-
-    if (scrollTop + clientHeight >= scrollHeight - 5) {
-        fetchData();
-    }
-};
-
 onMounted(async () => {
-    window.addEventListener('scroll', handleScroll);
     await fetchData();
 });
 </script>

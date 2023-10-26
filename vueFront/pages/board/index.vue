@@ -55,7 +55,7 @@ import { ref } from 'vue'
 const isLoading = ref(false); // 데이터 로딩 상태
 const bbsList = ref(null); //게시판 리스트
 const page = ref(1); //현재 페이지
-const pages = ref(null); //현재 페이지
+const pages = ref(null); //전체 페이지
 const limit = ref(10); //최대 갯수
 
 const fetchData = async () => {

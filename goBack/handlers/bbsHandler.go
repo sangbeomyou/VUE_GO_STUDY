@@ -312,3 +312,42 @@ func PostCommentWriteHandler(c echo.Context) error {
 		"result":  comment, //생성한 객체 보내기
 	})
 }
+
+func PostCommentEditHandler(c echo.Context) error {
+	client, err := db.ConnectDB()
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{
+			"error": "Failed to connect to database: " + err.Error(),
+		})
+	}
+
+	var comment models.TN_COMMENT_API
+
+	// 요청 본문에서 정보 가져오기
+	if err := c.Bind(&comment); err != nil {
+		return c.JSON(http.StatusOK, map[string]string{
+			"error": "Failed to bind request body: " + err.Error(),
+		})
+	}
+	// 나머지 설정
+	comment.UpdDate = time.Now().Format("2006-01-02 15:04:05")
+
+	// 게시물 업데이트
+	if err := client.Model(&models.TN_COMMENT{}).Where("idx = ?", comment.Idx).Updates(models.TN_COMMENT{
+		Content: comment.Content,
+		UpdDate: comment.UpdDate,
+	}).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return c.JSON(http.StatusNotFound, map[string]string{
+				"error": "Failed to update TN_COMMENT: Record not found",
+			})
+		}
+		return c.JSON(http.StatusInternalServerError, map[string]string{
+			"error": "Failed to update TN_COMMENT: " + err.Error(),
+		})
+	}
+
+	return c.JSON(http.StatusOK, map[string]string{
+		"success": "Y",
+	})
+}
