@@ -13,15 +13,24 @@
                             {{ comment.Content }}
                         </div>
                         <div v-else class="w-100">
-                            <v-textarea v-model="editContents[comment.Idx]" outlined auto-grow solo rows="3" class="w-100" ></v-textarea>
+                            <v-textarea v-model="editContents[comment.Idx]" outlined auto-grow solo rows="3"
+                                class="w-100"></v-textarea>
                             <v-btn @click="editComment(comment.Idx, editContents[comment.Idx])">저장</v-btn>
                         </div>
-                        <div v-if="isAuthor(comment.UserID) && isEdit(comment.Idx)">
-                            <v-btn flat class="text-primary" @click="startEditing(comment)">수정</v-btn>
-                            <v-btn flat class="text-red" @click="deleteComment(comment.Idx)">삭제</v-btn>
-                        </div>
+                        <v-card-actions>
+                            <v-btn v-if="isAuthor(comment.UserID) && isEdit(comment.Idx)" flat class="text-primary"
+                                @click="startEditing(comment)">수정</v-btn>
+                            <v-btn v-if="isAuthor(comment.UserID) && isEdit(comment.Idx)" flat class="text-red"
+                                @click="deleteComment(comment.Idx)">삭제</v-btn>
+                            <v-btn flat class="text" @click="showReplyField(comment.Idx)">답글 달기</v-btn>
+                        </v-card-actions>
                     </v-card-text>
-                    <!-- 대댓글 추가 버튼 또는 다른 인터랙션 요소를 이곳에 배치 -->
+                    <!-- 대댓글 입력 필드 -->
+                    <div v-if="replyingTo === comment.Idx">
+                        <v-textarea v-model="newReplyText[comment.Idx]" label="대댓글 입력" outlined auto-grow
+                            rows="3"></v-textarea>
+                        <v-btn color="primary" @click="postReply(comment.Idx,newReplyText[comment.Idx] )">답글 등록</v-btn>
+                    </div>
                 </v-card>
             </v-col>
         </v-row>
@@ -35,6 +44,7 @@
                 <v-textarea v-model="newCommentText" label="댓글 입력" outlined auto-grow rows="3"></v-textarea>
             </v-col>
         </v-row>
+
         <v-row class="mb-3">
             <v-col class="text-end">
                 <v-btn color="primary" @click="postComment">등록</v-btn>
@@ -64,8 +74,10 @@ const pages = ref(null); //전체 페이지
 const comments = ref(null); //댓글
 const limit = ref(5); //보여주는 댓글 수
 const total = ref(null); //전체 댓글 수
-const editingIdx = ref(null); //수정할 댓글 아이디
+const editingIdx = ref(null); //수정할 댓글 Idx
 const editContents = ref({}); // 수정 댓글
+const replyingTo = ref(null); //대댓글 Idx
+const newReplyText = ref({}); // 대댓글 댓글
 
 // 로그인 사용자 확인
 const isAuthor = (UserID) => {
@@ -78,7 +90,7 @@ const fetchData = async () => {
 
     isLoading.value = true; // 로딩 상태 시작
     try {
-        const response = await axios.get('http://localhost:8080/bbs/comment', {
+        const response = await axios.get('http://localhost:8080/comment/list', {
             params: { page: page.value, limit: limit.value, bbsId: props.bbsId },
             withCredentials: true
         }
@@ -100,7 +112,6 @@ const fetchData = async () => {
     }
 };
 
-
 // 댓글 페이지가 변경 
 const updatePage = (newPage) => {
     console.log(newPage)
@@ -118,8 +129,8 @@ const editComment = async (Idx, Content) => {
     // 데이터를 서버로 전송
     try {
         isLoading.value = true; // 로딩 상태 시작
-        const response = await axios.post('http://localhost:8080/bbs/commentEdit', {
-            Idx : String(Idx),
+        const response = await axios.post('http://localhost:8080/comment/edit', {
+            Idx: String(Idx),
             Content: Content,
         },
             { withCredentials: true }
@@ -129,7 +140,7 @@ const editComment = async (Idx, Content) => {
             alert("댓글이 수정되었습니다.");
             editingIdx.value = null; // 댓글 수정 창 종료
             isLoading.value = false; // 로딩 상태 종료
-            fetchData(); 
+            fetchData();
         } else {
             alert("댓글 수정에 실패하였습니다. 다시 시도해주세요.");
         }
@@ -141,18 +152,41 @@ const editComment = async (Idx, Content) => {
     }
 }
 
+// 수정폼 셋팅
 const startEditing = (comment) => {
     editingIdx.value = comment.Idx; // 수정할 댓글 idx 세팅
     editContents.value[comment.Idx] = comment.Content; // 수정할 댓글 세팅
 }
+
 // 수정 아이디 확인
 const isEdit = (Idx) => {
     return editingIdx.value !== Idx;
 };
 
 //댓글 삭제
-const deleteComment = async (UserID) => {
-    console.log(UserID)
+const deleteComment = async (Idx) => {
+    // 데이터를 서버로 전송
+    try {
+        isLoading.value = true; // 로딩 상태 시작
+        const response = await axios.post('http://localhost:8080/comment/delete', {
+            Idx: String(Idx),
+        },
+            { withCredentials: true }
+        );
+        console.log(response.data)
+        if (response.data.success === "Y") {
+            alert("댓글이 삭제되었습니다.");
+            isLoading.value = false; // 로딩 상태 종료
+            fetchData();
+        } else {
+            alert("댓글 삭제에 실패하였습니다. 다시 시도해주세요.");
+        }
+    } catch (error) {
+        console.error("댓글 작성 중 에러 발생:", error);
+        alert("댓글 삭제 중 문제가 발생하였습니다. 다시 시도해주세요.");
+    } finally {
+        isLoading.value = false; // 로딩 상태 종료
+    }
 }
 // 댓글 게시 기능
 const postComment = async () => {
@@ -162,7 +196,7 @@ const postComment = async () => {
     }
     try {
         isLoading.value = true; // 로딩 상태 시작
-        const response = await axios.post('http://localhost:8080/bbs/commentWrite', {
+        const response = await axios.post('http://localhost:8080/comment/write', {
             BbsId: props.bbsId,
             Content: newCommentText.value,
             UserID: user.uid,
@@ -190,6 +224,17 @@ const postComment = async () => {
     // 댓글 입력란 초기화
     newCommentText.value = '';
 };
+
+// 대댓글 필드 idx 셋팅
+const showReplyField = (Idx) => {
+    replyingTo.value = Idx;
+}
+
+// 대댓글 저장
+const postReply = async (Idx,newReplyText) => {
+    replyingTo.value = Idx;
+}
+
 
 onMounted(async () => {
     await fetchData();
