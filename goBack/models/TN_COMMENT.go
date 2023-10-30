@@ -2,15 +2,16 @@ package models
 
 // TN_BBS is the model entity for the TN_BBS schema.
 type TN_COMMENT struct {
-	Idx       uint   `gorm:"primaryKey;column:idx;autoIncrement"`
-	ParentIdx *uint  `gorm:"column:parent_idx"`
-	BbsId     string `gorm:"column:bbs_id"`
-	UserID    string `gorm:"column:user_id"`
-	UserName  string `gorm:"column:user_name"`
-	Content   string `gorm:"column:content"`
-	RegDate   string `gorm:"column:reg_date"`
-	UpdDate   string `gorm:"column:upd_date"`
-	DeleteYn  string `gorm:"column:delete_yn"`
+	Idx       uint         `gorm:"primaryKey;column:idx;autoIncrement"`
+	ParentIdx *uint        `gorm:"column:parent_idx"`
+	BbsId     string       `gorm:"column:bbs_id"`
+	UserID    string       `gorm:"column:user_id"`
+	UserName  string       `gorm:"column:user_name"`
+	Content   string       `gorm:"column:content"`
+	RegDate   string       `gorm:"column:reg_date"`
+	UpdDate   string       `gorm:"column:upd_date"`
+	DeleteYn  string       `gorm:"column:delete_yn"`
+	Replies   []TN_COMMENT `gorm:"-"` // 대댓글 목록을 위한 필드, DB에 저장되지 않음
 }
 
 type TN_COMMENT_API struct {

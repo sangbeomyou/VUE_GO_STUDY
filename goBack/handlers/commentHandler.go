@@ -48,7 +48,7 @@ func GetCommentHandler(c echo.Context) error {
 	offset := (page - 1) * limit // offset 계산
 
 	// 먼저, 전체 게시글의 수를 가져옵니다.
-	if result := client.Model(&models.TN_COMMENT{}).Where("delete_yn = ? AND bbs_id = ?", "N", BbsId).Count(&count); result.Error != nil {
+	if result := client.Model(&models.TN_COMMENT{}).Where("delete_yn = ? AND bbs_id = ? AND (parent_idx = ? OR parent_idx IS NULL)", "N", BbsId, 0).Count(&count); result.Error != nil {
 		return c.JSON(http.StatusOK, map[string]interface{}{
 			"success": "N",
 			"error":   "Failed to count TN_COMMENT: " + result.Error.Error(),
@@ -56,7 +56,7 @@ func GetCommentHandler(c echo.Context) error {
 	}
 
 	// 게시글을 limit와 offset을 이용하여 불러옵니다.
-	if result := client.Where("delete_yn = ? AND bbs_id = ?", "N", BbsId).Select("idx, bbs_id, user_id, user_name, content, reg_date").
+	if result := client.Where("delete_yn = ? AND bbs_id = ? AND (parent_idx = ? OR parent_idx IS NULL)", "N", BbsId, 0).Select("idx, bbs_id, parent_idx, user_id, user_name, content, reg_date").
 		Offset(offset).Limit(limit).Find(&commentList); result.Error != nil {
 		if result.Error == gorm.ErrRecordNotFound {
 			return c.JSON(http.StatusOK, map[string]interface{}{
@@ -68,6 +68,13 @@ func GetCommentHandler(c echo.Context) error {
 			"success": "N",
 			"error":   "Failed to query TN_COMMENT: " + result.Error.Error(),
 		})
+	}
+	//대댓글 필드 만들기
+	for i := range commentList {
+		var replies []models.TN_COMMENT
+		if result := client.Where("parent_idx = ?", commentList[i].Idx).Find(&replies); result.Error == nil {
+			commentList[i].Replies = replies
+		}
 	}
 
 	// 정상적으로 처리되었을 경우, 데이터와 함께 전체 페이지 수와 현재 페이지 번호를 클라이언트에 반환합니다.

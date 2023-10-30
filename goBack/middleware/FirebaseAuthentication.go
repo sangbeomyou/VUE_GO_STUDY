@@ -5,9 +5,9 @@ import (
 	"log"
 	"net/http"
 	"strings"
+	"time"
 
 	firebase "firebase.google.com/go/v4"
-	"github.com/joho/godotenv"
 	"github.com/labstack/echo/v4"
 	"google.golang.org/api/option"
 )
@@ -16,11 +16,6 @@ import (
 func FirebaseAuthentication() echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
-			// .env 파일 로드
-			err := godotenv.Load()
-			if err != nil {
-				log.Fatalf("Error loading .env file")
-			}
 
 			// 이경로는 인증 필요 안함
 			if strings.HasPrefix(c.Request().URL.Path, "/public") {
@@ -59,7 +54,17 @@ func FirebaseAuthentication() echo.MiddlewareFunc {
 			// ID 토큰을 검증합니다.
 			tokenInfo, err := client.VerifyIDToken(ctx, idToken)
 			if err != nil {
+				//인증토큰 아니라면
 				log.Printf("Error verifying ID token: %v", err)
+				// authToken 쿠키 삭제
+				c.SetCookie(&http.Cookie{
+					Name:     "authToken",
+					Value:    "",
+					HttpOnly: true,
+					Expires:  time.Unix(0, 0),
+					Path:     "/",
+					SameSite: http.SameSiteStrictMode,
+				})
 				//로그인 페이지로
 				return c.Redirect(http.StatusTemporaryRedirect, "http://localhost:3000/login")
 			}

@@ -16,22 +16,54 @@
                             <v-textarea v-model="editContents[comment.Idx]" outlined auto-grow solo rows="3"
                                 class="w-100"></v-textarea>
                             <v-btn @click="editComment(comment.Idx, editContents[comment.Idx])">저장</v-btn>
+                            <v-btn @click="editCencel()">취소</v-btn>
                         </div>
                         <v-card-actions>
                             <v-btn v-if="isAuthor(comment.UserID) && isEdit(comment.Idx)" flat class="text-primary"
                                 @click="startEditing(comment)">수정</v-btn>
                             <v-btn v-if="isAuthor(comment.UserID) && isEdit(comment.Idx)" flat class="text-red"
                                 @click="deleteComment(comment.Idx)">삭제</v-btn>
-                            <v-btn flat class="text" @click="showReplyField(comment.Idx)">답글 달기</v-btn>
+                            <v-btn v-if="isEdit(comment.Idx)" flat class="text" @click="showReplyField(comment.Idx)">답글
+                                달기</v-btn>
                         </v-card-actions>
                     </v-card-text>
-                    <!-- 대댓글 입력 필드 -->
-                    <div v-if="replyingTo === comment.Idx">
-                        <v-textarea v-model="newReplyText[comment.Idx]" label="대댓글 입력" outlined auto-grow
-                            rows="3"></v-textarea>
-                        <v-btn color="primary" @click="postReply(comment.Idx,newReplyText[comment.Idx] )">답글 등록</v-btn>
-                    </div>
                 </v-card>
+                <v-btn @click="toggleReplies(comment.Idx)">
+                    {{ showingRepliesFor === comment.Idx ? '닫기' : '대댓글 보기' }}
+                </v-btn>
+                <!-- 대댓글 목록 시작 -->
+                <v-col v-if="showingRepliesFor === comment.Idx" v-for="(reply, rIndex) in comment.Replies"
+                    :key="'reply-' + rIndex" offset="1">
+                    <v-card outlined class="my-1">
+                        <v-card-subtitle class="d-flex justify-space-between align-center">
+                            <div>{{ reply.UserName }}</div>
+                            <div class="text-end">{{ reply.RegDate }}</div>
+                        </v-card-subtitle>
+                        <v-card-text class="d-flex justify-space-between align-center">
+                            <div v-if="isEdit(reply.Idx)">
+                                {{ reply.Content }}
+                            </div>
+                            <div v-else class="w-100">
+                                <v-textarea v-model="editContents[reply.Idx]" outlined auto-grow solo rows="3"
+                                    class="w-100"></v-textarea>
+                                <v-btn @click="editComment(reply.Idx, editContents[reply.Idx])">저장</v-btn>
+                                <v-btn @click="editCencel()">취소</v-btn>
+                            </div>
+                            <v-card-actions>
+                                <v-btn v-if="isAuthor(reply.UserID) && isEdit(reply.Idx)" flat class="text-primary"
+                                    @click="startEditing(reply)">수정</v-btn>
+                                <v-btn v-if="isAuthor(reply.UserID) && isEdit(reply.Idx)" flat class="text-red"
+                                    @click="deleteComment(reply.Idx)">삭제</v-btn>
+                            </v-card-actions>
+                        </v-card-text>
+                    </v-card>
+                </v-col>
+                <!-- 대댓글 목록 끝 -->
+                <!-- 대댓글 입력 필드 -->
+                <div v-if="replyingTo === comment.Idx">
+                    <v-textarea v-model="newReplyText[comment.Idx]" label="대댓글 입력" outlined auto-grow rows="3"></v-textarea>
+                    <v-btn color="primary" @click="postReply(comment.Idx, newReplyText[comment.Idx])">답글 등록</v-btn>
+                </div>
             </v-col>
         </v-row>
 
@@ -55,7 +87,7 @@
   
 <script setup>
 import axios from 'axios'
-import { onMounted, reactive, ref, defineProps } from 'vue';
+import { onMounted, ref, defineProps } from 'vue';
 import { useAuthStore } from '~/stores/auth';
 
 const auth = useAuthStore();
@@ -78,7 +110,7 @@ const editingIdx = ref(null); //수정할 댓글 Idx
 const editContents = ref({}); // 수정 댓글
 const replyingTo = ref(null); //대댓글 Idx
 const newReplyText = ref({}); // 대댓글 댓글
-
+const showingRepliesFor = ref(null);
 // 로그인 사용자 확인
 const isAuthor = (UserID) => {
     return user.uid === UserID;
@@ -162,7 +194,10 @@ const startEditing = (comment) => {
 const isEdit = (Idx) => {
     return editingIdx.value !== Idx;
 };
-
+//수정 취소
+const editCencel = () => {
+    editingIdx.value = null; // 댓글 수정 창 종료
+}
 //댓글 삭제
 const deleteComment = async (Idx) => {
     // 데이터를 서버로 전송
@@ -225,14 +260,56 @@ const postComment = async () => {
     newCommentText.value = '';
 };
 
+//대댓글 토글
+const toggleReplies = (Idx) => {
+    if (showingRepliesFor.value === Idx) {
+        showingRepliesFor.value = null;
+    } else {
+        showingRepliesFor.value = Idx;
+    }
+}
+
 // 대댓글 필드 idx 셋팅
 const showReplyField = (Idx) => {
     replyingTo.value = Idx;
 }
 
 // 대댓글 저장
-const postReply = async (Idx,newReplyText) => {
-    replyingTo.value = Idx;
+const postReply = async (Idx, newReplyText) => {
+    if (!newReplyText || newReplyText.trim() === '') {
+        alert('댓글을 입력해 주세요');
+        return;
+    }
+    try {
+        isLoading.value = true; // 로딩 상태 시작
+        const response = await axios.post('http://localhost:8080/comment/write', {
+            BbsId: props.bbsId,
+            ParentIdx: Idx,
+            Content: newReplyText,
+            UserID: user.uid,
+            UserName: user.name
+        },
+            { withCredentials: true }
+        );
+
+        if (response.data.success === "Y") {
+            isLoading.value = false
+            // 배수로 딱 맞아떨어지면 다음 페이지를 보여줘야함
+            if (total.value % limit.value === 0) {
+                pages.value += 1;
+            }
+            updatePage(pages.value)
+        } else {
+            alert("댓글 작성이 실패했습니다.")
+        }
+        console.log(response)
+    } catch (error) {
+        console.error("Error fetching data:", error)
+    } finally {
+        isLoading.value = false
+    }
+    // 댓글 입력란 초기화
+    newCommentText.value = '';
 }
 
 

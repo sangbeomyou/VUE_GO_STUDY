@@ -3,15 +3,23 @@ package main
 import (
 	"goBack/handlers" //  함수가 있는 패키지 임포트
 	customMiddleware "goBack/middleware"
+	"log"
 
 	"net/http"
 
+	"github.com/joho/godotenv"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 )
 
 func main() {
 	e := echo.New()
+
+	// .env 파일 로드
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatalf("Error loading .env file")
+	}
 
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
 		AllowOrigins:     []string{"http://localhost:3000"},
@@ -45,7 +53,7 @@ func main() {
 	//위 경로 미들웨어 파이어 베이스 토큰 미확인
 	publicGroup := e.Group("/public")
 	publicGroup.GET("/", func(c echo.Context) error {
-		return c.String(http.StatusOK, "Hello, World!")
+		return c.Redirect(http.StatusTemporaryRedirect, "http://localhost:3000/login")
 	})
 	publicGroup.POST("/setToken", handlers.SetTokenHandler) //토큰 쿠키에 세팅
 	publicGroup.GET("/logout", handlers.GetLogoutHandler)   //로그아웃 쿠키 지우기
