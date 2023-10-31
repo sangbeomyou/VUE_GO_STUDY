@@ -24,6 +24,5 @@ const logoutclick = async () => {
     logout(); // 파이어 베이스 로그아웃
     auth.logout();  // store 로그아웃
     await axios.get('http://localhost:8080/public/logout', {withCredentials: true}); // 쿠키 지우기 ㅠㅠ 3번을 해야하네
-    navigateTo('/Login');
 }
 </script>

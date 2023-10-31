@@ -1,7 +1,10 @@
 import { ref, onMounted } from 'vue';
 import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile, fetchSignInMethodsForEmail } from 'firebase/auth';
+import { useAuthStore } from '~/stores/auth';
+
 
 export default function useFirebase() {
+  const authStore = useAuthStore();
   const user = ref(null);
   let auth;
 
@@ -9,10 +12,7 @@ export default function useFirebase() {
     auth = getAuth(); // 클라이언트 측에서만 Firebase Auth 인스턴스를 가져옵니다.
 
     onMounted(() => {
-      onAuthStateChanged(auth, (firebaseUser) => {
-        user.value = firebaseUser;
-      });
-      console.log(user);
+
     });
   }
 

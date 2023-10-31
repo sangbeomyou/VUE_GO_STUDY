@@ -6,7 +6,6 @@ export default defineNuxtRouteMiddleware((to, from) => {
         if (authStore.isLoading) return;  // 로딩 중이라면 로직을 건너뜁니다.
 
         if (!authStore.isAuthenticated && to.path !== '/login') {
-            console.log("sss");
             return navigateTo('/login');
         }
     }

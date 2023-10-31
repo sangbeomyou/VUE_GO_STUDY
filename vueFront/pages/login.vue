@@ -58,14 +58,14 @@ const loginclick = async () => {
       withCredentials: true
     });
     console.log(response)
-    // Firebase에서 설정된 email displayName을 가져옵니다.
-    const userEmail = userCredential.user.email;
-    const userName = userCredential.user.displayName;
-    const uid = userCredential.user.uid;
+    // // Firebase에서 설정된 email displayName을 가져옵니다.
+    // const userEmail = userCredential.user.email;
+    // const userName = userCredential.user.displayName;
+    // const uid = userCredential.user.uid;
 
-    //store 저장
-    auth.login({ email: userEmail, name: userName, uid: uid });
-    navigateTo('/home');
+    // //store 저장
+    // auth.login({ email: userEmail, name: userName, uid: uid });
+    //navigateTo('/home');
   } catch (error) {
     // 실패 시 에러 메시지 출력
     if (error.code === 'auth/user-not-found') {
