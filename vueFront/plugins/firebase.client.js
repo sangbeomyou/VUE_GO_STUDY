@@ -1,37 +1,39 @@
-import { initializeApp, getApps  } from "firebase/app";
+import { initializeApp, getApps } from "firebase/app";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { getAnalytics } from "firebase/analytics";
 import { useAuthStore } from '~/stores/auth';
 
-export default defineNuxtPlugin(async(nuxtApp) => {
+
+export default defineNuxtPlugin(async (nuxtApp) => {
   const config = useRuntimeConfig()
   const authStore = useAuthStore();
 
   const firebaseConfig = config.public.firebase;
 
-  const app = initializeApp(firebaseConfig);
+
+  if (!getApps().length) { // 이미 초기화된 앱이 없는 경우에만 초기화를 진행합니다.
+    initializeApp(firebaseConfig);
+  }
+
+  const app = getApps()[0]; // 초기화된 Firebase 앱 가져오기
 
   const analytics = getAnalytics(app);
   console.log(app)
 
-  if (!getApps().length) {
-    console.log(auth)
-  }
   const auth = getAuth(app);
+  if (process.client) {
+    onAuthStateChanged(auth, (firebaseUser) => {
+      if (firebaseUser) {
+        console.log(firebaseUser);
+        authStore.login({ email: firebaseUser.email, name: firebaseUser.displayName, uid: firebaseUser.uid });
+      }
+      else {
+        console.log(firebaseUser);
+        navigateTo('/Login');
+      }
+    });
+  }
 
-  onAuthStateChanged(auth, (firebaseUser) => {
-    if (firebaseUser) {
-      console.log("onAuthStateChanged", firebaseUser);
-      authStore.login({ email: firebaseUser.email, name: firebaseUser.displayName, uid: firebaseUser.uid });
-      navigateTo('/home');
-    }
-    else  {
-      console.log("onAuthStateChanged", firebaseUser);
-      navigateTo('/Login');
-    }
-  }); 
-
-  
   return {
     provide: {
       fireAuth: auth,

@@ -52,6 +52,7 @@ const signup = () => {
 const loginclick = async () => {
   try {
     const userCredential = await login(email.value, password.value);
+    //console.log(userCredential)
     // 서버에 토큰 전송
     const token = await userCredential.user.getIdToken();
     const response = await axios.post('http://localhost:8080/public/setToken', { token: token }, {
@@ -65,7 +66,7 @@ const loginclick = async () => {
 
     // //store 저장
     // auth.login({ email: userEmail, name: userName, uid: uid });
-    //navigateTo('/home');
+    navigateTo('/home');
   } catch (error) {
     // 실패 시 에러 메시지 출력
     if (error.code === 'auth/user-not-found') {
