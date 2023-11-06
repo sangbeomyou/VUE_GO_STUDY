@@ -52,8 +52,12 @@ func main() {
 
 	//위 경로 미들웨어 파이어 베이스 토큰 미확인
 	publicGroup := e.Group("/public")
+	// 경로 테스트용
 	publicGroup.GET("/", func(c echo.Context) error {
 		return c.Redirect(http.StatusTemporaryRedirect, "http://localhost:3000/login")
+	})
+	publicGroup.GET("/test", func(c echo.Context) error {
+		return c.String(http.StatusOK, "Hello, World!")
 	})
 	publicGroup.POST("/setToken", handlers.SetTokenHandler) //토큰 쿠키에 세팅
 	publicGroup.GET("/logout", handlers.GetLogoutHandler)   //로그아웃 쿠키 지우기
